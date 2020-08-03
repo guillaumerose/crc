@@ -1,13 +1,13 @@
 package ssh
 
 import (
-	"encoding/base64"
+	"errors"
 	"fmt"
-	"os"
-
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/machine/libmachine/drivers"
+	"os"
+	"yunion.io/x/executor/client"
 )
 
 type Runner struct {
@@ -32,7 +32,6 @@ func (runner *Runner) SetTextContentAsRoot(destFilename string, content string, 
 	logging.Debugf("Creating %s with permissions 0%o in the CRC VM", destFilename, mode)
 	command := fmt.Sprintf("sudo install -m 0%o /dev/null %s && cat <<EOF | sudo tee %s\n%s\nEOF", mode, destFilename, destFilename, content)
 	_, err := runner.RunPrivate(command)
-
 	return err
 }
 
@@ -45,42 +44,12 @@ func (runner *Runner) SetPrivateKeyPath(path string) {
 }
 
 func (runner *Runner) CopyData(data []byte, destFilename string) error {
-	base64Data := base64.StdEncoding.EncodeToString(data)
-	command := fmt.Sprintf("echo %s | base64 --decode | sudo tee %s > /dev/null", base64Data, destFilename)
-	_, err := runner.Run(command)
-
-	return err
+	return errors.New("unsupported")
 }
 
 func (runner *Runner) runSSHCommandFromDriver(command string, runPrivate bool) (string, error) {
-	client, err := drivers.GetSSHClientFromDriver(runner.driver, runner.privateSSHKey)
-	if err != nil {
-		return "", err
-	}
-
-	if runPrivate {
-		logging.Debugf("About to run SSH command with hidden output")
-	} else {
-		logging.Debugf("About to run SSH command:\n%s", command)
-	}
-
-	output, err := client.Output(command)
-	if runPrivate {
-		if err != nil {
-			logging.Debugf("SSH command failed")
-		} else {
-			logging.Debugf("SSH command succeeded")
-		}
-	} else {
-		logging.Debugf("SSH command results: err: %v, output: %s", err, output)
-	}
-
-	if err != nil {
-		return "", fmt.Errorf(`ssh command error:
-command : %s
-err     : %v
-output  : %s`, command, err, output)
-	}
-
-	return output, nil
+	client.Init("")
+	cmd := client.Command("/bin/sh", "-c", command)
+	stdout, err := cmd.Output()
+	return string(stdout), err
 }
