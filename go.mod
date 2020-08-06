@@ -17,6 +17,8 @@ require (
 	github.com/h2non/filetype v1.1.0
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/mattn/go-colorable v0.1.2
+	github.com/onsi/ginkgo v1.14.0
+	github.com/onsi/gomega v1.10.1
 	github.com/pbnjay/memory v0.0.0-20190104145345-974d429e7ae4
 	github.com/pborman/uuid v1.2.0
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
@@ -28,8 +30,8 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
-	golang.org/x/sys v0.0.0-20200116001909-b77594299b42
-	golang.org/x/text v0.3.0
+	golang.org/x/sys v0.0.0-20200805065543-0cf7623e9dbd
+	golang.org/x/text v0.3.2
 	gopkg.in/AlecAivazis/survey.v1 v1.8.5
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb
 )
