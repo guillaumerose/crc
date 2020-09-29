@@ -54,10 +54,9 @@ func fixDaemonPlistFileExists() error {
 		return err
 	}
 	daemonConfig := launchd.AgentConfig{
-		Label:          daemonAgentLabel,
-		BinaryPath:     currentExecutablePath,
-		StdOutFilePath: stdOutFilePathDaemon,
-		Args:           []string{"daemon", "--log-level", "debug"},
+		Label:            daemonAgentLabel,
+		StdOutFilePath:   stdOutFilePathDaemon,
+		ProgramArguments: []string{currentExecutablePath, "daemon", "--log-level", "debug"},
 	}
 	return fixPlistFileExists(daemonConfig)
 }
@@ -75,9 +74,9 @@ func checkIfTrayPlistFileExists() error {
 
 func fixTrayPlistFileExists() error {
 	trayConfig := launchd.AgentConfig{
-		Label:          trayAgentLabel,
-		BinaryPath:     constants.TrayBinaryPath,
-		StdOutFilePath: stdOutFilePathTray,
+		Label:            trayAgentLabel,
+		ProgramArguments: []string{constants.TrayBinaryPath},
+		StdOutFilePath:   stdOutFilePathTray,
 	}
 	return fixPlistFileExists(trayConfig)
 }

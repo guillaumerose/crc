@@ -1,7 +1,6 @@
 package launchd
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	goos "os"
@@ -9,42 +8,19 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"text/template"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/os"
-)
-
-const (
-	plistTemplate = `<?xml version='1.0' encoding='UTF-8'?>
-	<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-	<plist version='1.0'>
-		<dict>
-			<key>Label</key>
-			<string>{{ .Label }}</string>
-			<key>ProgramArguments</key>
-			<array>
-				<string>{{ .BinaryPath }}</string>
-			{{ range .Args }}
-				<string>{{ . }}</string>
-			{{ end }}
-			</array>
-			<key>StandardOutPath</key>
-			<string>{{ .StdOutFilePath }}</string>
-			<key>Disabled</key>
-			<false/>
-			<key>RunAtLoad</key>
-			<true/>
-		</dict>
-	</plist>`
+	"howett.net/plist"
 )
 
 // AgentConfig is struct to contain configuration for agent plist file
 type AgentConfig struct {
-	Label          string
-	BinaryPath     string
-	StdOutFilePath string
-	Args           []string
+	Label            string   `plist:"Label"`
+	StdOutFilePath   string   `plist:"StandardOutPath"`
+	ProgramArguments []string `plist:"ProgramArguments"`
+	Disabled         bool     `plist:"Disabled"`
+	RunAtLoad        bool     `plist:"RunAtLoad"`
 }
 
 var (
@@ -70,26 +46,13 @@ func CreatePlist(config AgentConfig) error {
 		return err
 	}
 
-	plistContent, err := templatize(config)
+	plistContent, err := plist.MarshalIndent(config, plist.XMLFormat, "  ")
 	if err != nil {
 		return err
 	}
 	// #nosec G306
 	err = ioutil.WriteFile(getPlistPath(config.Label), plistContent, 0644)
 	return err
-}
-
-func templatize(config AgentConfig) ([]byte, error) {
-	var plistContent bytes.Buffer
-	t, err := template.New("plist").Parse(plistTemplate)
-	if err != nil {
-		return nil, err
-	}
-	err = t.Execute(&plistContent, config)
-	if err != nil {
-		return nil, err
-	}
-	return plistContent.Bytes(), nil
 }
 
 func PlistExists(label string) bool {
