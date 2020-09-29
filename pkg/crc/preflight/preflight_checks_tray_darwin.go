@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	goos "os"
 	"path/filepath"
+	"reflect"
 
 	"github.com/Masterminds/semver"
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -35,13 +36,18 @@ type TrayVersion struct {
 }
 
 func checkIfDaemonPlistFileExists() error {
-	// crc setup can be ran from any location in the
-	// users computer, and we need to update the plist
-	// file with the path of the crc binary which was
-	// used to run setup, to force it this check needs
-	// to always fail so the fix routine is triggered
-
-	return fmt.Errorf("Ignoring this check and triggering creation of daemon plist")
+	config, err := launchd.ReadPlist(daemonAgentLabel)
+	if err != nil {
+		return err
+	}
+	executable, err := goos.Executable()
+	if err != nil {
+		return err
+	}
+	if reflect.DeepEqual(daemonAgentConfig(executable), *config) {
+		return nil
+	}
+	return errors.New("Unexpected daemon agent configuration")
 }
 
 func fixDaemonPlistFileExists() error {
@@ -49,16 +55,19 @@ func fixDaemonPlistFileExists() error {
 	// and recreate its plist
 	_ = launchd.Remove(daemonAgentLabel)
 
-	currentExecutablePath, err := goos.Executable()
+	executable, err := goos.Executable()
 	if err != nil {
 		return err
 	}
-	daemonConfig := launchd.AgentConfig{
+	return fixPlistFileExists(daemonAgentConfig(executable))
+}
+
+func daemonAgentConfig(currentExecutablePath string) launchd.AgentConfig {
+	return launchd.AgentConfig{
 		Label:            daemonAgentLabel,
 		StdOutFilePath:   stdOutFilePathDaemon,
 		ProgramArguments: []string{currentExecutablePath, "daemon", "--log-level", "debug"},
 	}
-	return fixPlistFileExists(daemonConfig)
 }
 
 func removeDaemonPlistFile() error {

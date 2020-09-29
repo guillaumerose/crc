@@ -37,3 +37,14 @@ func TestSerializeAgentConfig(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, plistExample, string(bin))
 }
+
+func TestParseAgentConfig(t *testing.T) {
+	var config AgentConfig
+	_, err := plist.Unmarshal([]byte(plistExample), &config)
+	assert.NoError(t, err)
+	assert.Equal(t, AgentConfig{
+		Label:            "label",
+		StdOutFilePath:   "stdout",
+		ProgramArguments: []string{"binary", "arg1", "arg2"},
+	}, config)
+}

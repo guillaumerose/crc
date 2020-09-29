@@ -40,6 +40,18 @@ func getPlistPath(label string) string {
 	return filepath.Join(launchAgentsDir, plistName)
 }
 
+func ReadPlist(label string) (*AgentConfig, error) {
+	bin, err := ioutil.ReadFile(getPlistPath(label))
+	if err != nil {
+		return nil, err
+	}
+	var config AgentConfig
+	if _, err := plist.Unmarshal(bin, &config); err != nil {
+		return nil, err
+	}
+	return &config, nil
+}
+
 // CreatePlist creates a launchd agent plist config file
 func CreatePlist(config AgentConfig) error {
 	if err := ensureLaunchAgentsDirExists(); err != nil {
