@@ -70,18 +70,26 @@ func CreatePlist(config AgentConfig) error {
 		return err
 	}
 
-	var plistContent bytes.Buffer
-	t, err := template.New("plist").Parse(plistTemplate)
-	if err != nil {
-		return err
-	}
-	err = t.Execute(&plistContent, config)
+	plistContent, err := templatize(config)
 	if err != nil {
 		return err
 	}
 	// #nosec G306
-	err = ioutil.WriteFile(getPlistPath(config.Label), plistContent.Bytes(), 0644)
+	err = ioutil.WriteFile(getPlistPath(config.Label), plistContent, 0644)
 	return err
+}
+
+func templatize(config AgentConfig) ([]byte, error) {
+	var plistContent bytes.Buffer
+	t, err := template.New("plist").Parse(plistTemplate)
+	if err != nil {
+		return nil, err
+	}
+	err = t.Execute(&plistContent, config)
+	if err != nil {
+		return nil, err
+	}
+	return plistContent.Bytes(), nil
 }
 
 func PlistExists(label string) bool {
