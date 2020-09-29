@@ -75,19 +75,26 @@ func removeDaemonPlistFile() error {
 }
 
 func checkIfTrayPlistFileExists() error {
-	if !launchd.PlistExists(trayAgentLabel) {
-		return fmt.Errorf("Tray plist file does not exist")
+	config, err := launchd.ReadPlist(trayAgentLabel)
+	if err != nil {
+		return err
 	}
-	return nil
+	if reflect.DeepEqual(trayAgentConfig(), *config) {
+		return nil
+	}
+	return errors.New("Unexpected tray agent configuration")
 }
 
 func fixTrayPlistFileExists() error {
-	trayConfig := launchd.AgentConfig{
+	return fixPlistFileExists(trayAgentConfig())
+}
+
+func trayAgentConfig() launchd.AgentConfig {
+	return launchd.AgentConfig{
 		Label:            trayAgentLabel,
 		ProgramArguments: []string{constants.TrayBinaryPath},
 		StdOutFilePath:   stdOutFilePathTray,
 	}
-	return fixPlistFileExists(trayConfig)
 }
 
 func removeTrayPlistFile() error {
