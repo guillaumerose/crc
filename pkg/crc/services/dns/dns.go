@@ -24,7 +24,7 @@ func init() {
 func RunPostStart(serviceConfig services.ServicePostStartConfig) (services.ServicePostStartResult, error) {
 	result := &services.ServicePostStartResult{Name: serviceConfig.Name}
 
-	if runtime.GOOS == "linux" && serviceConfig.ExperimentalFeatures {
+	if runtime.GOOS != "windows" && serviceConfig.ExperimentalFeatures {
 		res, err := runPostStartForOS(serviceConfig, result)
 		if err != nil {
 			result.Success = res.Success

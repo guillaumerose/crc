@@ -136,10 +136,8 @@ github.com/cockroachdb/cockroach-go v0.0.0-20181001143604-e0a95dfd547c/go.mod h1
 github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:zn76sxSg3SzpJ0PPJaLDCu+Bu0Lg3sKTORVIj19EIF8=
 github.com/code-ready/clicumber v0.0.0-20200728062640-1203dda97f67 h1:C+EVPWw8sjASF/529T8BMddoACTb+ruHB8yrZoYscek=
 github.com/code-ready/clicumber v0.0.0-20200728062640-1203dda97f67/go.mod h1:ZPZUcYGpv/FQGnwakUuhiHP9x/IIcU2SKbn8xPe4ROc=
-github.com/code-ready/gvisor-tap-vsock v0.0.0-20200930085912-c05609ca14e0 h1:By1VE/+C+dCnDaQHUMfzmrUCgVuAFLta3687zFwlE2U=
-github.com/code-ready/gvisor-tap-vsock v0.0.0-20200930085912-c05609ca14e0/go.mod h1:0wgRpiCKHlo9dGQzsH7+MKnx7TDWNJyrgN8MT85IlMY=
-github.com/code-ready/machine v0.0.0-20200928132629-d2fe955a85f9 h1:HYHfWZSbmamEU/3LaT/vU0G8hrH7IFMva7jP3A68isA=
-github.com/code-ready/machine v0.0.0-20200928132629-d2fe955a85f9/go.mod h1:g30jKsf0FV9yJjsqZFAuFzVxwJE2h5cqDXSuMUV1G/U=
+github.com/code-ready/gvisor-tap-vsock v0.0.0-20200930192728-12d66d13bed3 h1:51SP9xP/IvUF+czrdrwT+UmcOSG2Ts2b35pvHmVVa54=
+github.com/code-ready/gvisor-tap-vsock v0.0.0-20200930192728-12d66d13bed3/go.mod h1:0wgRpiCKHlo9dGQzsH7+MKnx7TDWNJyrgN8MT85IlMY=
 github.com/codegangsta/negroni v1.0.0/go.mod h1:v0y3T5G7Y1UlFfyxFn/QLRU4a2EuNau2iZY63YTKWo0=
 github.com/container-storage-interface/spec v1.2.0/go.mod h1:6URME8mwIBbpVyZV93Ce5St17xBiQJQY67NDsuohiy4=
 github.com/containerd/cgroups v0.0.0-20181219155423-39b18af02c41/go.mod h1:X9rLEHIqSf/wfK8NsPqxJmeZgW4pcfzdXITDrUSJ6uI=
@@ -471,6 +469,8 @@ github.com/grpc-ecosystem/grpc-gateway v1.9.5/go.mod h1:vNeuVxBJEsws4ogUvrchl83t
 github.com/grpc-ecosystem/grpc-health-probe v0.2.1-0.20181220223928-2bf0a5b182db/go.mod h1:uBKkC2RbarFsvS5jMJHpVhTLvGlGQj9JJwkaePE3FWI=
 github.com/guillaumerose/dns-1 v1.1.5-0.20200731203003-fe9b991fbece h1:uBOoHhCRXk0kXpM6CYTFlfVDPFasnRkkgRSoGSJtFLA=
 github.com/guillaumerose/dns-1 v1.1.5-0.20200731203003-fe9b991fbece/go.mod h1:KNUDUusw/aVsxyTYZM1oqvCicbwhgbNgztCETuNZ7xM=
+github.com/guillaumerose/machine v0.0.0-20200930081607-ddae21ebb4a9 h1:v0MYC0sVNxy3Z1Stx7SaB86Bv+Xu3MboxLXoEbTubfk=
+github.com/guillaumerose/machine v0.0.0-20200930081607-ddae21ebb4a9/go.mod h1:g30jKsf0FV9yJjsqZFAuFzVxwJE2h5cqDXSuMUV1G/U=
 github.com/h2non/filetype v1.1.0 h1:Or/gjocJrJRNK/Cri/TDEKFjAR+cfG6eK65NGYB6gBA=
 github.com/h2non/filetype v1.1.0/go.mod h1:319b3zT68BvV+WRj7cwy856M2ehB3HqNOt6sy1HndBY=
 github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed/go.mod h1:tMWxXQ9wFIaZeTI9F+hmhFiGpFmhOHzyShyFUhRm0H4=

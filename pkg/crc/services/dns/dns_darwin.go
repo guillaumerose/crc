@@ -40,6 +40,11 @@ func runPostStartForOS(serviceConfig services.ServicePostStartConfig, result *se
 		return *result, err
 	}
 
+	if serviceConfig.ExperimentalFeatures {
+		result.Success = true
+		return *result, nil
+	}
+
 	// Write resolver config to host
 	needRestart, err := createResolverFile(serviceConfig.IP, serviceConfig.BundleMetadata.ClusterInfo.BaseDomain,
 		serviceConfig.BundleMetadata.ClusterInfo.BaseDomain)

@@ -35,7 +35,7 @@ var daemonCmd = &cobra.Command{
 		logging.CloseLogging()
 		logging.InitLogrus(logging.LogLevel, constants.DaemonLogFilePath)
 
-		if runtime.GOOS != "linux" {
+		if runtime.GOOS == "windows" {
 			runDaemon(config)
 			return
 		}
@@ -46,8 +46,11 @@ var daemonCmd = &cobra.Command{
 		_ = os.Remove(apiSock)
 
 		endpoints := []string{
-			transport.DefaultURL,
 			fmt.Sprintf("unix://%s", apiSock),
+		}
+
+		if runtime.GOOS == "linux" {
+			endpoints = append(endpoints, transport.DefaultURL)
 		}
 
 		if err := run(&types.Configuration{

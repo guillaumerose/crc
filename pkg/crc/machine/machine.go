@@ -201,6 +201,18 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		}
 	}
 
+	if runtime.GOOS == "darwin" {
+		dst := filepath.Join(constants.MachineInstanceDir, startConfig.Name, "00000002.00000400")
+		if _, err := os.Stat(dst); err != nil {
+			if !os.IsNotExist(err) {
+				return startError(startConfig.Name, "VSock listener error", err)
+			}
+			if err := os.Symlink(filepath.Join(constants.CrcBaseDir, "network.sock"), dst); err != nil {
+				return startError(startConfig.Name, "VSock symlink error", err)
+			}
+		}
+	}
+
 	clusterConfig, err := getClusterConfig(crcBundleMetadata)
 	if err != nil {
 		return startError(startConfig.Name, "Cannot create cluster configuration", err)

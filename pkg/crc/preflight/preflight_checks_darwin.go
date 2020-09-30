@@ -17,56 +17,80 @@ const (
 	hostsFile    = "/etc/hosts"
 )
 
-func checkHyperKitInstalled() error {
-	h := cache.NewHyperKitCache()
-	if !h.IsCached() {
-		return fmt.Errorf("%s binary is not cached", h.GetBinaryName())
+func checkHyperKitInstalled(experimentalFeatures bool) func() error {
+	return func() error {
+		h := cache.NewHyperKitCache()
+		if !h.IsCached() {
+			return fmt.Errorf("%s binary is not cached", h.GetBinaryName())
+		}
+		hyperkitPath := h.GetBinaryPath()
+		err := unix.Access(hyperkitPath, unix.X_OK)
+		if err != nil {
+			return fmt.Errorf("%s not executable", hyperkitPath)
+		}
+		if err := h.CheckVersion(); err != nil {
+			return err
+		}
+
+		if experimentalFeatures {
+			return nil
+		}
+		return checkSuid(hyperkitPath)
 	}
-	hyperkitPath := h.GetBinaryPath()
-	err := unix.Access(hyperkitPath, unix.X_OK)
-	if err != nil {
-		return fmt.Errorf("%s not executable", hyperkitPath)
-	}
-	if err := h.CheckVersion(); err != nil {
-		return err
-	}
-	return checkSuid(hyperkitPath)
 }
 
-func fixHyperKitInstallation() error {
-	h := cache.NewHyperKitCache()
+func fixHyperKitInstallation(experimentalFeatures bool) func() error {
+	return func() error {
+		h := cache.NewHyperKitCache()
 
-	logging.Debugf("Installing %s", h.GetBinaryName())
+		logging.Debugf("Installing %s", h.GetBinaryName())
 
-	if err := h.EnsureIsCached(); err != nil {
-		return fmt.Errorf("Unable to download %s : %v", h.GetBinaryName(), err)
+		if err := h.EnsureIsCached(); err != nil {
+			return fmt.Errorf("Unable to download %s : %v", h.GetBinaryName(), err)
+		}
+
+		if experimentalFeatures {
+			return nil
+		}
+		return setSuid(h.GetBinaryPath())
 	}
-	return setSuid(h.GetBinaryPath())
 }
 
-func checkMachineDriverHyperKitInstalled() error {
-	hyperkitDriver := cache.NewMachineDriverHyperKitCache()
+func checkMachineDriverHyperKitInstalled(experimentalFeatures bool) func() error {
+	return func() error {
+		hyperkitDriver := cache.NewMachineDriverHyperKitCache()
 
-	logging.Debugf("Checking if %s is installed", hyperkitDriver.GetBinaryName())
-	if !hyperkitDriver.IsCached() {
-		return fmt.Errorf("%s binary is not cached", hyperkitDriver.GetBinaryName())
-	}
+		logging.Debugf("Checking if %s is installed", hyperkitDriver.GetBinaryName())
+		if !hyperkitDriver.IsCached() {
+			return fmt.Errorf("%s binary is not cached", hyperkitDriver.GetBinaryName())
+		}
 
-	if err := hyperkitDriver.CheckVersion(); err != nil {
-		return err
+		if err := hyperkitDriver.CheckVersion(); err != nil {
+			return err
+		}
+
+		if experimentalFeatures {
+			return nil
+		}
+		return checkSuid(hyperkitDriver.GetBinaryPath())
 	}
-	return checkSuid(hyperkitDriver.GetBinaryPath())
 }
 
-func fixMachineDriverHyperKitInstalled() error {
-	hyperkitDriver := cache.NewMachineDriverHyperKitCache()
+func fixMachineDriverHyperKitInstalled(experimentalFeatures bool) func() error {
+	return func() error {
+		hyperkitDriver := cache.NewMachineDriverHyperKitCache()
 
-	logging.Debugf("Installing %s", hyperkitDriver.GetBinaryName())
+		logging.Debugf("Installing %s", hyperkitDriver.GetBinaryName())
 
-	if err := hyperkitDriver.EnsureIsCached(); err != nil {
-		return fmt.Errorf("Unable to download %s : %v", hyperkitDriver.GetBinaryName(), err)
+		if err := hyperkitDriver.EnsureIsCached(); err != nil {
+			return fmt.Errorf("Unable to download %s : %v", hyperkitDriver.GetBinaryName(), err)
+		}
+
+		if experimentalFeatures {
+			return nil
+		}
+		return setSuid(hyperkitDriver.GetBinaryPath())
 	}
-	return setSuid(hyperkitDriver.GetBinaryPath())
 }
 
 func checkEtcHostsFilePermissions() error {

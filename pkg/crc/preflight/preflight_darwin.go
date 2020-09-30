@@ -5,21 +5,23 @@ import (
 )
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
-var hyperkitPreflightChecks = [...]Check{
-	{
-		configKeySuffix:  "check-hyperkit-installed",
-		checkDescription: "Checking if HyperKit is installed",
-		check:            checkHyperKitInstalled,
-		fixDescription:   "Setting up virtualization with HyperKit",
-		fix:              fixHyperKitInstallation,
-	},
-	{
-		configKeySuffix:  "check-hyperkit-driver",
-		checkDescription: "Checking if crc-driver-hyperkit is installed",
-		check:            checkMachineDriverHyperKitInstalled,
-		fixDescription:   "Installing crc-machine-hyperkit",
-		fix:              fixMachineDriverHyperKitInstalled,
-	},
+func hyperkitPreflightChecks(experimentalFeatures bool) []Check {
+	return []Check{
+		{
+			configKeySuffix:  "check-hyperkit-installed",
+			checkDescription: "Checking if HyperKit is installed",
+			check:            checkHyperKitInstalled(experimentalFeatures),
+			fixDescription:   "Setting up virtualization with HyperKit",
+			fix:              fixHyperKitInstallation(experimentalFeatures),
+		},
+		{
+			configKeySuffix:  "check-hyperkit-driver",
+			checkDescription: "Checking if crc-driver-hyperkit is installed",
+			check:            checkMachineDriverHyperKitInstalled(experimentalFeatures),
+			fixDescription:   "Installing crc-machine-hyperkit",
+			fix:              fixMachineDriverHyperKitInstalled(experimentalFeatures),
+		},
+	}
 }
 
 var dnsPreflightChecks = [...]Check{
@@ -30,6 +32,9 @@ var dnsPreflightChecks = [...]Check{
 		fixDescription:   fmt.Sprintf("Setting file permissions for %s", hostsFile),
 		fix:              fixEtcHostsFilePermissions,
 	},
+}
+
+var resolverPreflightChecks = [...]Check{
 	{
 		configKeySuffix:    "check-resolver-file-permissions",
 		checkDescription:   fmt.Sprintf("Checking file permissions for %s", resolverFile),
@@ -95,7 +100,7 @@ var traySetupChecks = [...]Check{
 }
 
 func getAllPreflightChecks() []Check {
-	return getPreflightChecks(true)
+	return append(getPreflightChecks(true), getPreflightChecks(false)...)
 }
 
 func getPreflightChecks(experimentalFeatures bool) []Check {
@@ -103,9 +108,12 @@ func getPreflightChecks(experimentalFeatures bool) []Check {
 
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, nonWinPreflightChecks[:]...)
-	checks = append(checks, hyperkitPreflightChecks[:]...)
+	checks = append(checks, hyperkitPreflightChecks(experimentalFeatures)...)
 	checks = append(checks, dnsPreflightChecks[:]...)
 
+	if !experimentalFeatures {
+		checks = append(checks, resolverPreflightChecks[:]...)
+	}
 	// Experimental feature
 	if experimentalFeatures {
 		checks = append(checks, traySetupChecks[:]...)

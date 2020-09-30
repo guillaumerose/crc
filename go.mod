@@ -9,7 +9,7 @@ require (
 	github.com/cavaliercoder/grab v2.0.0+incompatible
 	github.com/cheggaaa/pb/v3 v3.0.4
 	github.com/code-ready/clicumber v0.0.0-20200728062640-1203dda97f67
-	github.com/code-ready/gvisor-tap-vsock v0.0.0-20200930085912-c05609ca14e0
+	github.com/code-ready/gvisor-tap-vsock v0.0.0-20200930192728-12d66d13bed3
 	github.com/code-ready/machine v0.0.0-20200928132629-d2fe955a85f9
 	github.com/cucumber/godog v0.9.0
 	github.com/cucumber/messages-go/v10 v10.0.3
@@ -79,3 +79,5 @@ replace vbom.ml/util => github.com/fvbommel/util v0.0.2
 replace github.com/miekg/dns => github.com/guillaumerose/dns-1 v1.1.5-0.20200731203003-fe9b991fbece
 
 replace golang.org/x/sys => golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6
+
+replace github.com/code-ready/machine => github.com/guillaumerose/machine v0.0.0-20200930081607-ddae21ebb4a9

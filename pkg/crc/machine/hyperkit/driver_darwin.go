@@ -23,5 +23,7 @@ func CreateHost(machineConfig config.MachineConfig) *hyperkit.Driver {
 	hyperkitDriver.SSHKeyPath = machineConfig.SSHKeyPath
 	hyperkitDriver.HyperKitPath = filepath.Join(constants.CrcBinDir, "hyperkit")
 
+	hyperkitDriver.VMNet = !machineConfig.VSockNetwork
+
 	return hyperkitDriver
 }
