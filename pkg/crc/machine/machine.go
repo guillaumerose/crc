@@ -117,10 +117,11 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 	}
 	if !exists {
 		machineConfig := config.MachineConfig{
-			Name:       startConfig.Name,
-			BundleName: filepath.Base(startConfig.BundlePath),
-			CPUs:       startConfig.CPUs,
-			Memory:     startConfig.Memory,
+			Name:         startConfig.Name,
+			BundleName:   filepath.Base(startConfig.BundlePath),
+			CPUs:         startConfig.CPUs,
+			Memory:       startConfig.Memory,
+			VSockNetwork: client.experimentalFeatures,
 		}
 
 		pullSecret, err = startConfig.GetPullSecret()
@@ -216,11 +217,11 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		return startError(startConfig.Name, "Error getting the state", err)
 	}
 
-	instanceIP, err := host.Driver.GetIP()
+	instanceIP, err := getIP(host, client.experimentalFeatures)
 	if err != nil {
 		return startError(startConfig.Name, "Error getting the IP", err)
 	}
-	sshRunner := crcssh.CreateRunner(instanceIP, constants.DefaultSSHPort, crcBundleMetadata.GetSSHKeyPath(), constants.GetPrivateKeyPath())
+	sshRunner := crcssh.CreateRunner(instanceIP, getSSHPort(client.experimentalFeatures), crcBundleMetadata.GetSSHKeyPath(), constants.GetPrivateKeyPath())
 
 	logging.Debug("Waiting until ssh is available")
 	if err := cluster.WaitForSSH(sshRunner); err != nil {
@@ -275,7 +276,8 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 		SSHRunner: sshRunner,
 		IP:        instanceIP,
 		// TODO: should be more finegrained
-		BundleMetadata: *crcBundleMetadata,
+		BundleMetadata:       *crcBundleMetadata,
+		ExperimentalFeatures: client.experimentalFeatures,
 	}
 
 	// Run the DNS server inside the VM
@@ -285,7 +287,10 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 
 	// Check DNS lookup before starting the kubelet
 	if queryOutput, err := dns.CheckCRCLocalDNSReachable(servicePostStartConfig); err != nil {
-		return startError(startConfig.Name, fmt.Sprintf("Failed internal DNS query: %s", queryOutput), err)
+		if !client.experimentalFeatures {
+			return startError(startConfig.Name, fmt.Sprintf("Failed internal DNS query: %s", queryOutput), err)
+		}
+		logging.Warn(fmt.Sprintf("Failed internal DNS query: %s: %v", queryOutput, err))
 	}
 	logging.Info("Check internal and public DNS query ...")
 
@@ -296,7 +301,10 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 	// Check DNS lookup from host to VM
 	logging.Info("Check DNS query from host ...")
 	if err := network.CheckCRCLocalDNSReachableFromHost(crcBundleMetadata, instanceIP); err != nil {
-		return startError(startConfig.Name, "Failed to query DNS from host", err)
+		if !client.experimentalFeatures {
+			return startError(startConfig.Name, "Failed to query DNS from host", err)
+		}
+		logging.Warn(fmt.Sprintf("Failed to query DNS from host: %v", err))
 	}
 
 	ocConfig := oc.UseOCWithSSH(sshRunner)
@@ -384,6 +392,20 @@ func (client *client) Start(startConfig StartConfig) (StartResult, error) {
 	}, err
 }
 
+func getSSHPort(vsockNetwork bool) int {
+	if vsockNetwork {
+		return 2222
+	}
+	return constants.DefaultSSHPort
+}
+
+func getIP(h *host.Host, vsockNetwork bool) (string, error) {
+	if vsockNetwork {
+		return "127.0.0.1", nil
+	}
+	return h.Driver.GetIP()
+}
+
 func (*client) Stop(stopConfig StopConfig) (StopResult, error) {
 	defer unsetMachineLogging()
 
@@ -466,7 +488,7 @@ func (*client) Delete(deleteConfig DeleteConfig) (DeleteResult, error) {
 	}, nil
 }
 
-func (*client) IP(ipConfig IPConfig) (IPResult, error) {
+func (client *client) IP(ipConfig IPConfig) (IPResult, error) {
 	err := setMachineLogging(ipConfig.Debug)
 	if err != nil {
 		return ipError(ipConfig.Name, "Cannot initialize logging", err)
@@ -482,7 +504,7 @@ func (*client) IP(ipConfig IPConfig) (IPResult, error) {
 	if err != nil {
 		return ipError(ipConfig.Name, "Cannot load machine", err)
 	}
-	ip, err := host.Driver.GetIP()
+	ip, err := getIP(host, client.experimentalFeatures)
 	if err != nil {
 		return ipError(ipConfig.Name, "Cannot get IP", err)
 	}
@@ -493,7 +515,7 @@ func (*client) IP(ipConfig IPConfig) (IPResult, error) {
 	}, nil
 }
 
-func (*client) Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
+func (client *client) Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, error) {
 	libMachineAPIClient, cleanup, err := createLibMachineClient(false)
 	defer cleanup()
 	if err != nil {
@@ -530,11 +552,11 @@ func (*client) Status(statusConfig ClusterStatusConfig) (ClusterStatusResult, er
 		}
 		proxyConfig.ApplyToEnvironment()
 
-		ip, err := host.Driver.GetIP()
+		ip, err := getIP(host, client.experimentalFeatures)
 		if err != nil {
 			return statusError(statusConfig.Name, "Error getting ip", err)
 		}
-		sshRunner := crcssh.CreateRunner(ip, constants.DefaultSSHPort, constants.GetPrivateKeyPath())
+		sshRunner := crcssh.CreateRunner(ip, getSSHPort(client.experimentalFeatures), constants.GetPrivateKeyPath())
 		// check if all the clusteroperators are running
 		ocConfig := oc.UseOCWithSSH(sshRunner)
 		operatorsStatus, err := cluster.GetClusterOperatorsStatus(ocConfig)

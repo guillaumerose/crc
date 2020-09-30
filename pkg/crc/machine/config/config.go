@@ -16,4 +16,7 @@ type MachineConfig struct {
 	KernelCmdLine string
 	Initramfs     string
 	Kernel        string
+
+	// Experimental features
+	VSockNetwork bool
 }

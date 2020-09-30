@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"text/tabwriter"
 
+	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/machine"
@@ -24,7 +25,7 @@ var statusCmd = &cobra.Command{
 	Short: "Display status of the OpenShift cluster",
 	Long:  "Show details about the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := runStatus(os.Stdout, machine.NewClient(), constants.MachineCacheDir, outputFormat); err != nil {
+		if err := runStatus(os.Stdout, machine.NewClient(config.Get(cmdConfig.ExperimentalFeatures).AsBool()), constants.MachineCacheDir, outputFormat); err != nil {
 			exit.WithMessage(1, err.Error())
 		}
 	},

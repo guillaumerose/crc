@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/machine"
@@ -32,7 +33,7 @@ func runOcEnv(args []string) error {
 		return fmt.Errorf("Error running the oc-env command: %s", err.Error())
 	}
 
-	client := machine.NewClient()
+	client := machine.NewClient(config.Get(cmdConfig.ExperimentalFeatures).AsBool())
 	consoleResult, err := client.GetConsoleURL(machine.ConsoleConfig{
 		Name: constants.DefaultName,
 	})

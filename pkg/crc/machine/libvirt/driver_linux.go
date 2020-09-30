@@ -12,10 +12,16 @@ func CreateHost(machineConfig config.MachineConfig) *libvirt.Driver {
 	libvirtDriver.CPU = machineConfig.CPUs
 	libvirtDriver.Memory = machineConfig.Memory
 	libvirtDriver.BundleName = machineConfig.BundleName
-	libvirtDriver.Network = DefaultNetwork
 	libvirtDriver.ImageSourcePath = machineConfig.ImageSourcePath
 	libvirtDriver.ImageFormat = machineConfig.ImageFormat
 	libvirtDriver.SSHKeyPath = machineConfig.SSHKeyPath
+
+	if machineConfig.VSockNetwork {
+		libvirtDriver.Network = ""
+		libvirtDriver.VSock = true
+	} else {
+		libvirtDriver.Network = DefaultNetwork
+	}
 
 	return libvirtDriver
 }

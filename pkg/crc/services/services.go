@@ -17,10 +17,11 @@ type ServicePreStartResult struct {
 }
 
 type ServicePostStartConfig struct {
-	Name           string
-	SSHRunner      *ssh.Runner
-	BundleMetadata bundle.CrcBundleInfo
-	IP             string
+	Name                 string
+	SSHRunner            *ssh.Runner
+	BundleMetadata       bundle.CrcBundleInfo
+	IP                   string
+	ExperimentalFeatures bool
 }
 
 type ServicePostStartResult struct {

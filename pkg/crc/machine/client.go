@@ -11,8 +11,12 @@ type Client interface {
 	Stop(stopConfig StopConfig) (StopResult, error)
 }
 
-type client struct{}
+type client struct {
+	experimentalFeatures bool
+}
 
-func NewClient() Client {
-	return &client{}
+func NewClient(experimentalFeatures bool) Client {
+	return &client{
+		experimentalFeatures: experimentalFeatures,
+	}
 }

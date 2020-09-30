@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 
+	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/input"
@@ -27,7 +28,7 @@ var deleteCmd = &cobra.Command{
 	Short: "Delete the OpenShift cluster",
 	Long:  "Delete the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := runDelete(os.Stdout, machine.NewClient(), clearCache, constants.MachineCacheDir, outputFormat != jsonFormat, globalForce, outputFormat); err != nil {
+		if err := runDelete(os.Stdout, machine.NewClient(config.Get(cmdConfig.ExperimentalFeatures).AsBool()), clearCache, constants.MachineCacheDir, outputFormat != jsonFormat, globalForce, outputFormat); err != nil {
 			exit.WithMessage(1, err.Error())
 		}
 	},

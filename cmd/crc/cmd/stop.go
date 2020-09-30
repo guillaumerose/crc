@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 
+	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/input"
@@ -24,7 +25,7 @@ var stopCmd = &cobra.Command{
 	Short: "Stop the OpenShift cluster",
 	Long:  "Stop the OpenShift cluster",
 	Run: func(cmd *cobra.Command, args []string) {
-		if renderErr := runStop(os.Stdout, machine.NewClient(), outputFormat != jsonFormat, globalForce, outputFormat); renderErr != nil {
+		if renderErr := runStop(os.Stdout, machine.NewClient(config.Get(cmdConfig.ExperimentalFeatures).AsBool()), outputFormat != jsonFormat, globalForce, outputFormat); renderErr != nil {
 			exit.WithMessage(1, renderErr.Error())
 		}
 	},

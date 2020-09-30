@@ -71,7 +71,7 @@ func runStart(arguments []string) (*machine.StartResult, error) {
 		Debug:         isDebugLog(),
 	}
 
-	client := machine.NewClient()
+	client := machine.NewClient(config.Get(cmdConfig.ExperimentalFeatures).AsBool())
 	result, err := client.Start(startConfig)
 	return &result, err
 }

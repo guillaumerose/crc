@@ -34,6 +34,12 @@ var setupCmd = &cobra.Command{
 }
 
 func runSetup(arguments []string) error {
+	// If set as flag, set in the config file for later commands
+	if config.Get(cmdConfig.ExperimentalFeatures).AsBool() {
+		if _, err := config.Set(cmdConfig.ExperimentalFeatures, true); err != nil {
+			return err
+		}
+	}
 	err := preflight.SetupHost(config)
 	return render(&setupResult{
 		Success: err == nil,

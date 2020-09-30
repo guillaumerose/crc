@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 
+	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
@@ -17,7 +18,7 @@ func CreateAPIServer(socketPath string, config config.Storage) (CrcAPIServer, er
 		logging.Error("Failed to create socket: ", err.Error())
 		return CrcAPIServer{}, err
 	}
-	return createAPIServerWithListener(listener, machine.NewClient(), config)
+	return createAPIServerWithListener(listener, machine.NewClient(config.Get(cmdConfig.ExperimentalFeatures).AsBool()), config)
 }
 
 func createAPIServerWithListener(listener net.Listener, client machine.Client, config config.Storage) (CrcAPIServer, error) {

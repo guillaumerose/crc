@@ -81,6 +81,10 @@ var traySetupChecks = [...]Check{
 	},
 }
 
+func getAllPreflightChecks() []Check {
+	return getPreflightChecks(true)
+}
+
 func getPreflightChecks(experimentalFeatures bool) []Check {
 	checks := []Check{}
 	checks = append(checks, genericPreflightChecks[:]...)

@@ -74,6 +74,14 @@ var libvirtPreflightChecks = [...]Check{
 		fix:              fixLibvirtCrcNetworkActive,
 	},
 	{
+		cleanupDescription: "Removing the crc VM if exists",
+		cleanup:            removeCrcVM,
+		flags:              CleanUpOnly,
+	},
+}
+
+var dnsmasqPreflightChecks = [...]Check{
+	{
 		configKeySuffix:  "check-network-manager-installed",
 		checkDescription: "Checking if NetworkManager is installed",
 		check:            checkNetworkManagerInstalled,
@@ -105,11 +113,10 @@ var libvirtPreflightChecks = [...]Check{
 		cleanupDescription: "Removing /etc/NetworkManager/dnsmasq.d/crc.conf file",
 		cleanup:            removeCrcDnsmasqConfigFile,
 	},
-	{
-		cleanupDescription: "Removing the crc VM if exists",
-		cleanup:            removeCrcVM,
-		flags:              CleanUpOnly,
-	},
+}
+
+func getAllPreflightChecks() []Check {
+	return getPreflightChecks(false)
 }
 
 func getPreflightChecks(experimentalFeatures bool) []Check {
@@ -117,6 +124,8 @@ func getPreflightChecks(experimentalFeatures bool) []Check {
 	checks = append(checks, genericPreflightChecks[:]...)
 	checks = append(checks, nonWinPreflightChecks[:]...)
 	checks = append(checks, libvirtPreflightChecks[:]...)
-
+	if !experimentalFeatures {
+		checks = append(checks, dnsmasqPreflightChecks[:]...)
+	}
 	return checks
 }

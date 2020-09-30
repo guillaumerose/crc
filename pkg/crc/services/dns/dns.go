@@ -2,6 +2,7 @@ package dns
 
 import (
 	"fmt"
+	"runtime"
 	"time"
 
 	"github.com/code-ready/crc/pkg/crc/errors"
@@ -22,6 +23,37 @@ func init() {
 
 func RunPostStart(serviceConfig services.ServicePostStartConfig) (services.ServicePostStartResult, error) {
 	result := &services.ServicePostStartResult{Name: serviceConfig.Name}
+
+	if runtime.GOOS == "linux" && serviceConfig.ExperimentalFeatures {
+		res, err := runPostStartForOS(serviceConfig, result)
+		if err != nil {
+			result.Success = res.Success
+			result.Error = err.Error()
+			return *result, err
+		}
+
+		// override resolv.conf file
+		resolvFileValues := network.ResolvFileValues{
+			SearchDomains: []network.SearchDomain{
+				{
+					Domain: fmt.Sprintf("%s.%s", serviceConfig.Name, serviceConfig.BundleMetadata.ClusterInfo.BaseDomain),
+				},
+			},
+			NameServers: []network.NameServer{
+				{
+					IPAddress: "192.168.127.1",
+				},
+			},
+		}
+		if err := network.CreateResolvFileOnInstance(serviceConfig.SSHRunner, resolvFileValues); err != nil {
+			result.Success = false
+			result.Error = err.Error()
+			return *result, err
+		}
+
+		result.Success = true
+		return *result, nil
+	}
 
 	err := createDnsmasqDNSConfig(serviceConfig)
 	if err != nil {

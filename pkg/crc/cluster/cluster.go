@@ -25,7 +25,7 @@ func WaitForSSH(sshRunner *ssh.Runner) error {
 		return nil
 	}
 
-	return errors.RetryAfter(60, checkSSHConnectivity, time.Second)
+	return errors.RetryAfter(300, checkSSHConnectivity, time.Second)
 }
 
 type CertExpiryState int

@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/exit"
 	"github.com/code-ready/crc/pkg/crc/machine"
@@ -36,7 +37,7 @@ func runPodmanEnv(args []string) error {
 		Debug: isDebugLog(),
 	}
 
-	client := machine.NewClient()
+	client := machine.NewClient(config.Get(cmdConfig.ExperimentalFeatures).AsBool())
 	if err := checkIfMachineMissing(client, ipConfig.Name); err != nil {
 		return err
 	}
