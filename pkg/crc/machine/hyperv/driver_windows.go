@@ -19,9 +19,13 @@ func CreateHost(machineConfig config.MachineConfig) *hyperv.Driver {
 	hypervDriver.DisableDynamicMemory = true
 	hypervDriver.Memory = machineConfig.Memory
 
-	// Determine the Virtual Switch to be used
-	_, switchName := winnet.SelectSwitchByNameOrDefault(AlternativeNetwork)
-	hypervDriver.VirtualSwitch = switchName
+	if machineConfig.VSockNetwork {
+		hypervDriver.VirtualSwitch = ""
+	} else {
+		// Determine the Virtual Switch to be used
+		_, switchName := winnet.SelectSwitchByNameOrDefault(AlternativeNetwork)
+		hypervDriver.VirtualSwitch = switchName
+	}
 
 	hypervDriver.ImageSourcePath = machineConfig.ImageSourcePath
 	hypervDriver.ImageFormat = machineConfig.ImageFormat
