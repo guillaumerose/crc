@@ -76,3 +76,5 @@ replace (
 )
 
 replace vbom.ml/util => github.com/fvbommel/util v0.0.2
+
+replace github.com/code-ready/machine => github.com/guillaumerose/machine v0.0.0-20201019100228-7267f06b244a

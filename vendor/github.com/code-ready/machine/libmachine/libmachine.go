@@ -1,10 +1,11 @@
 package libmachine
 
 import (
+	"encoding/json"
 	"fmt"
-	"path/filepath"
-
+	"github.com/code-ready/machine/drivers/hyperv"
 	"io"
+	"path/filepath"
 
 	"github.com/code-ready/machine/drivers/errdriver"
 	"github.com/code-ready/machine/libmachine/auth"
@@ -49,9 +50,18 @@ func NewClient(storePath, certsDir string) *Client {
 }
 
 func (api *Client) NewHost(driverName string, driverPath string, rawDriver []byte) (*host.Host, error) {
-	driver, err := api.clientDriverFactory.NewRPCClientDriver(driverName, driverPath, rawDriver)
-	if err != nil {
-		return nil, err
+	var driver drivers.Driver
+	if driverName == "hyperv" {
+		driver = hyperv.NewDriver("", "")
+		if err := json.Unmarshal(rawDriver, &driver); err != nil {
+			return nil, err
+		}
+	} else {
+		var err error
+		driver, err = api.clientDriverFactory.NewRPCClientDriver(driverName, driverPath, rawDriver)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &host.Host{
@@ -79,6 +89,15 @@ func (api *Client) Load(name string) (*host.Host, error) {
 	h, err := api.Filestore.Load(name)
 	if err != nil {
 		return nil, err
+	}
+
+	if h.DriverName == "hyperv" {
+		foo := hyperv.NewDriver("", "")
+		if err := json.Unmarshal(h.RawDriver, &foo); err != nil {
+			return nil, err
+		}
+		h.Driver = foo
+		return h, nil
 	}
 
 	d, err := api.clientDriverFactory.NewRPCClientDriver(h.DriverName, h.DriverPath, h.RawDriver)
