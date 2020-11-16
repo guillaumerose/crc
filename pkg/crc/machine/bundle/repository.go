@@ -45,7 +45,6 @@ func (repo *Repository) Get(bundleName string) (*CrcBundleInfo, error) {
 		return nil, err
 	}
 	bundleInfo.cachedPath = path
-	bundleInfo.bundleName = bundleName
 
 	if err := bundleInfo.verify(); err != nil {
 		return nil, err
