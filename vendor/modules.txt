@@ -76,6 +76,8 @@ github.com/docker/spdystream/spdy
 github.com/fatih/color
 # github.com/fsnotify/fsnotify v1.4.9
 github.com/fsnotify/fsnotify
+# github.com/github/certstore v0.1.0
+github.com/github/certstore
 # github.com/go-logr/logr v0.2.0
 github.com/go-logr/logr
 # github.com/gofrs/uuid v3.2.0+incompatible

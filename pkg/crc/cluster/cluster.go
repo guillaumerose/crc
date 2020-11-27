@@ -1,8 +1,10 @@
 package cluster
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"strconv"
 	"strings"
@@ -14,6 +16,7 @@ import (
 	"github.com/code-ready/crc/pkg/crc/oc"
 	"github.com/code-ready/crc/pkg/crc/ssh"
 	"github.com/code-ready/crc/pkg/crc/validation"
+	"github.com/github/certstore"
 	"github.com/pborman/uuid"
 )
 
@@ -250,13 +253,35 @@ Environment=NO_PROXY=.cluster.local,.svc,10.128.0.0/14,172.30.0.0/16,%s`
 
 	if proxy.ProxyCACert != "" {
 		logging.Debug("Adding proxy CA cert to instance")
-		return addProxyCACertToInstance(sshRunner, proxy)
+		return AddProxyCACertToInstance(sshRunner, proxy)
 	}
 	return nil
 }
 
-func addProxyCACertToInstance(sshRunner *ssh.Runner, proxy *network.ProxyConfig) error {
-	if err := sshRunner.CopyData([]byte(proxy.ProxyCACert), "/etc/pki/ca-trust/source/anchors/openshift-config-user-ca-bundle.crt", 0600); err != nil {
+func AddProxyCACertToInstance(sshRunner *ssh.Runner, proxy *network.ProxyConfig) error {
+	store, err := certstore.Open()
+	if err != nil {
+		return err
+	}
+	identities, err := store.Identities()
+	if err != nil {
+		return err
+	}
+	var ret []string
+	for _, identity := range identities {
+		certs, err := identity.CertificateChain()
+		if err != nil {
+			return err
+		}
+		for _, cert := range certs {
+			var b bytes.Buffer
+			if err := pem.Encode(&b, &pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw}); err != nil {
+				return err
+			}
+			ret = append(ret, b.String())
+		}
+	}
+	if err := sshRunner.CopyData([]byte(strings.Join(ret, "\n")), "/etc/pki/ca-trust/source/anchors/openshift-config-user-ca-bundle.crt", 0600); err != nil {
 		return err
 	}
 	if _, _, err := sshRunner.Run("sudo update-ca-trust"); err != nil {

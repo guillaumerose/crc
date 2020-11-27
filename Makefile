@@ -58,7 +58,7 @@ ifdef OKD_VERSION
 endif
 
 # https://golang.org/cmd/link/
-LDFLAGS := $(VERSION_VARIABLES) -extldflags='-static' -s -w
+LDFLAGS := $(VERSION_VARIABLES) -s -w
 
 # Add default target
 .PHONY: default

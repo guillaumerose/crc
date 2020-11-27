@@ -307,6 +307,10 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		}
 	}
 
+	if err := cluster.AddProxyCACertToInstance(sshRunner, nil); err != nil {
+		return nil, errors.Wrap(err, "cannot add certs")
+	}
+
 	proxyConfig, err := getProxyConfig(crcBundleMetadata.ClusterInfo.BaseDomain)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting proxy configuration")
