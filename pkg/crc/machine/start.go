@@ -1,6 +1,7 @@
 package machine
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -30,6 +31,8 @@ import (
 	"github.com/code-ready/machine/libmachine/state"
 	"github.com/docker/go-units"
 	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const minimumMemoryForMonitoring = 14336
@@ -343,6 +346,12 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		return nil, errors.Wrap(err, "Failed to update cluster ID")
 	}
 
+	if client.useVSock() {
+		if err := ensureRoutesControllerIsRunning(sshRunner, ocConfig); err != nil {
+			return nil, err
+		}
+	}
+
 	if client.monitoringEnabled {
 		logging.Info("Enabling cluster monitoring operator...")
 		if err := cluster.StartMonitoring(ocConfig); err != nil {
@@ -545,4 +554,38 @@ func logBundleDate(crcBundleMetadata *bundle.CrcBundleInfo) {
 			logging.Debugf("Bundle has been generated %d days ago", int(bundleAgeDays))
 		}
 	}
+}
+
+func ensureRoutesControllerIsRunning(sshRunner *crcssh.Runner, ocConfig oc.Config) error {
+	bin, err := json.Marshal(v1.Pod{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Pod",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "routes-controller",
+			Namespace: "openshift-ingress",
+		},
+		Spec: v1.PodSpec{
+			ServiceAccountName: "router",
+			Containers: []v1.Container{
+				{
+					Name:            "routes-controller",
+					Image:           "quay.io/crcont/routes-controller:6effc2f0304d3a11c1e22c278b10630e834d0220",
+					ImagePullPolicy: v1.PullIfNotPresent,
+				},
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+	if err := sshRunner.CopyData(bin, "/tmp/routes-controller.json", 0444); err != nil {
+		return err
+	}
+	_, _, err = ocConfig.RunOcCommand("apply", "-f", "/tmp/routes-controller.json")
+	if err != nil {
+		return err
+	}
+	return nil
 }
