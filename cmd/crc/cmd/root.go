@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"golang.org/x/sync/semaphore"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -163,10 +164,16 @@ func newMachine() machine.Client {
 	return newMachineWithConfig(config)
 }
 
+var lock = semaphore.NewWeighted(1)
+
 func newMachineWithConfig(config crcConfig.Storage) machine.Client {
 	networkMode := network.ParseMode(config.Get(cmdConfig.NetworkMode).AsString())
 	enableMonitoring := config.Get(cmdConfig.EnableClusterMonitoring).AsBool()
-	return machine.NewClient(constants.DefaultName, networkMode, enableMonitoring)
+	machineClient := machine.NewClient(constants.DefaultName, networkMode, enableMonitoring)
+	return &machine.Synchronized{
+		Lock:       lock,
+		Underlying: machineClient,
+	}
 }
 
 func addForceFlag(cmd *cobra.Command) {

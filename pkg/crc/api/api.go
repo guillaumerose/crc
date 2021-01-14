@@ -20,8 +20,7 @@ func CreateServer(socketPath string, config newConfigFunc, machine newMachineFun
 
 func createServerWithListener(listener net.Listener, config newConfigFunc, machine newMachineFunc) (Server, error) {
 	apiServer := Server{
-		listener:               listener,
-		clusterOpsRequestsChan: make(chan clusterOpsRequest, 10),
+		listener: listener,
 		handlerFactory: func() (RequestHandler, error) {
 			cfg, err := config()
 			if err != nil {
@@ -37,7 +36,6 @@ func createServerWithListener(listener net.Listener, config newConfigFunc, machi
 }
 
 func (api Server) Serve() error {
-	go api.handleClusterOperations() // go routine that handles start, stop and delete calls
 	for {
 		conn, err := api.listener.Accept()
 		if err != nil {
@@ -48,12 +46,6 @@ func (api Server) Serve() error {
 			return err
 		}
 		api.handleConnections(conn) // handle version, status, webconsole, etc. requests
-	}
-}
-
-func (api Server) handleClusterOperations() {
-	for req := range api.clusterOpsRequestsChan {
-		api.handleRequest(req.command, req.socket)
 	}
 }
 
@@ -108,32 +100,7 @@ func (api Server) handleConnections(conn net.Conn) {
 		logging.Error("Error decoding request: ", err.Error())
 		return
 	}
-	// start, stop and delete are slow operations, and change the VM state so they have to run sequentially.
-	// We don't want other operations querying the status of the VM to be blocked by these,
-	// so they are treated by a dedicated go routine
-
-	switch req.Command {
-	case "start", "stop", "delete":
-		// queue new request to channel
-		r := clusterOpsRequest{
-			command: req,
-			socket:  conn,
-		}
-		if !addRequestToChannel(r, api.clusterOpsRequestsChan) {
-			logging.Error("Channel capacity reached, unable to add new request")
-			errMsg := encodeErrorToJSON("Sockets channel capacity reached, unable to add new request")
-			writeStringToSocket(conn, errMsg)
-			conn.Close()
-		}
-
-	case "status", "version", "setconfig", "getconfig", "unsetconfig", "webconsoleurl":
-		go api.handleRequest(req, conn)
-
-	default:
-		err := encodeErrorToJSON(fmt.Sprintf("Unknown command supplied: %s", req.Command))
-		writeStringToSocket(conn, err)
-		conn.Close()
-	}
+	go api.handleRequest(req, conn)
 }
 
 func writeStringToSocket(socket net.Conn, msg string) {
@@ -147,14 +114,5 @@ func writeStringToSocket(socket net.Conn, msg string) {
 	if err != nil {
 		logging.Error("Failed writing string to socket", err.Error())
 		return
-	}
-}
-
-func addRequestToChannel(req clusterOpsRequest, requestsChan chan clusterOpsRequest) bool {
-	select {
-	case requestsChan <- req:
-		return true
-	default:
-		return false
 	}
 }
