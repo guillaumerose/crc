@@ -4,8 +4,10 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -32,9 +34,9 @@ func TestApi(t *testing.T) {
 	require.NoError(t, err)
 
 	client := fakemachine.NewClient()
-	api, err := createServerWithListener(listener, setupNewInMemoryConfig, func(_ config.Storage) machine.Client {
+	api, err := createServerWithListener(listener, handler(setupNewInMemoryConfig, func(_ config.Storage) machine.Client {
 		return client
-	})
+	}))
 	require.NoError(t, err)
 	go func() {
 		if err := api.Serve(); err != nil {
@@ -140,6 +142,7 @@ func TestApi(t *testing.T) {
 		assert.NoError(t, err)
 
 		var res map[string]interface{}
+		fmt.Println(string(payload[0:n]))
 		assert.NoError(t, json.Unmarshal(payload[0:n], &res))
 		assert.Equal(t, test.expected, res)
 	}
@@ -221,9 +224,9 @@ func setupAPIServer(t *testing.T) (string, func()) {
 	require.NoError(t, err)
 
 	client := fakemachine.NewClient()
-	api, err := createServerWithListener(listener, setupNewInMemoryConfig, func(_ config.Storage) machine.Client {
+	api, err := createServerWithListener(listener, handler(setupNewInMemoryConfig, func(_ config.Storage) machine.Client {
 		return client
-	})
+	}))
 	require.NoError(t, err)
 	go func() {
 		if err := api.Serve(); err != nil {
@@ -251,4 +254,25 @@ func (s *skipPreflights) Set(key string, value interface{}) error {
 
 func (s *skipPreflights) Unset(key string) error {
 	return s.storage.Unset(key)
+}
+
+func handler(config newConfigFunc, machine newMachineFunc) http.Handler {
+	factory := func() (http.Handler, error) {
+		cfg, err := config()
+		if err != nil {
+			return nil, err
+		}
+		return &Handler{
+			Config:        cfg,
+			MachineClient: &Adapter{Underlying: machine(cfg)},
+		}, nil
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handler, err := factory()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		handler.ServeHTTP(w, r)
+	})
 }

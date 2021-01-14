@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
 
 	"github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/cluster"
@@ -20,39 +23,72 @@ type Handler struct {
 	Config        crcConfig.Storage
 }
 
-func (h *Handler) Status() string {
-	clusterStatus := h.MachineClient.Status()
+func (handler *Handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	body, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	var result string
+	cmd := strings.TrimPrefix(request.URL.Path, "/")
+	switch cmd {
+	case "start":
+		result = handler.Start(body)
+	case "stop":
+		result = handler.Stop()
+	case "status":
+		result = handler.Status()
+	case "delete":
+		result = handler.Delete()
+	case "version":
+		result = handler.GetVersion()
+	case "setconfig":
+		result = handler.SetConfig(body)
+	case "unsetconfig":
+		result = handler.UnsetConfig(body)
+	case "getconfig":
+		result = handler.GetConfig(body)
+	case "webconsoleurl":
+		result = handler.GetWebconsoleInfo()
+	default:
+		result = encodeErrorToJSON(fmt.Sprintf("Unknown command supplied: %s", cmd))
+	}
+	_, _ = writer.Write([]byte(result))
+}
+
+func (handler *Handler) Status() string {
+	clusterStatus := handler.MachineClient.Status()
 	return encodeStructToJSON(clusterStatus)
 }
 
-func (h *Handler) Stop() string {
-	commandResult := h.MachineClient.Stop()
+func (handler *Handler) Stop() string {
+	commandResult := handler.MachineClient.Stop()
 	return encodeStructToJSON(commandResult)
 }
 
-func (h *Handler) Start(args json.RawMessage) string {
+func (handler *Handler) Start(args json.RawMessage) string {
 	var parsedArgs startArgs
 	var err error
 	if args != nil {
 		parsedArgs, err = parseStartArgs(args)
 		if err != nil {
 			startErr := &StartResult{
-				Name:  h.MachineClient.GetName(),
+				Name:  handler.MachineClient.GetName(),
 				Error: fmt.Sprintf("Incorrect arguments given: %s", err.Error()),
 			}
 			return encodeStructToJSON(startErr)
 		}
 	}
-	if err := preflight.StartPreflightChecks(h.Config); err != nil {
+	if err := preflight.StartPreflightChecks(handler.Config); err != nil {
 		startErr := &StartResult{
-			Name:  h.MachineClient.GetName(),
+			Name:  handler.MachineClient.GetName(),
 			Error: err.Error(),
 		}
 		return encodeStructToJSON(startErr)
 	}
 
-	startConfig := getStartConfig(h.Config, parsedArgs)
-	status := h.MachineClient.Start(startConfig)
+	startConfig := getStartConfig(handler.Config, parsedArgs)
+	status := handler.MachineClient.Start(startConfig)
 	return encodeStructToJSON(status)
 }
 
@@ -83,7 +119,7 @@ type VersionResult struct {
 	Success          bool
 }
 
-func (h *Handler) GetVersion() string {
+func (handler *Handler) GetVersion() string {
 	v := &VersionResult{
 		CrcVersion:       version.GetCRCVersion(),
 		CommitSha:        version.GetCommitSha(),
@@ -93,17 +129,17 @@ func (h *Handler) GetVersion() string {
 	return encodeStructToJSON(v)
 }
 
-func (h *Handler) Delete() string {
-	r := h.MachineClient.Delete()
+func (handler *Handler) Delete() string {
+	r := handler.MachineClient.Delete()
 	return encodeStructToJSON(r)
 }
 
-func (h *Handler) GetWebconsoleInfo() string {
-	r := h.MachineClient.GetConsoleURL()
+func (handler *Handler) GetWebconsoleInfo() string {
+	r := handler.MachineClient.GetConsoleURL()
 	return encodeStructToJSON(r)
 }
 
-func (h *Handler) SetConfig(args json.RawMessage) string {
+func (handler *Handler) SetConfig(args json.RawMessage) string {
 	setConfigResult := setOrUnsetConfigResult{}
 	if args == nil {
 		setConfigResult.Error = "No config keys provided"
@@ -125,7 +161,7 @@ func (h *Handler) SetConfig(args json.RawMessage) string {
 	var successProps []string
 
 	for k, v := range configs {
-		_, err := h.Config.Set(k, v)
+		_, err := handler.Config.Set(k, v)
 		if err != nil {
 			multiError.Collect(err)
 			continue
@@ -141,7 +177,7 @@ func (h *Handler) SetConfig(args json.RawMessage) string {
 	return encodeStructToJSON(setConfigResult)
 }
 
-func (h *Handler) UnsetConfig(args json.RawMessage) string {
+func (handler *Handler) UnsetConfig(args json.RawMessage) string {
 	unsetConfigResult := setOrUnsetConfigResult{}
 	if args == nil {
 		unsetConfigResult.Error = "No config keys provided"
@@ -162,7 +198,7 @@ func (h *Handler) UnsetConfig(args json.RawMessage) string {
 
 	keysToUnset := keys["properties"]
 	for _, key := range keysToUnset {
-		_, err := h.Config.Unset(key)
+		_, err := handler.Config.Unset(key)
 		if err != nil {
 			multiError.Collect(err)
 			continue
@@ -176,10 +212,10 @@ func (h *Handler) UnsetConfig(args json.RawMessage) string {
 	return encodeStructToJSON(unsetConfigResult)
 }
 
-func (h *Handler) GetConfig(args json.RawMessage) string {
+func (handler *Handler) GetConfig(args json.RawMessage) string {
 	configResult := getConfigResult{}
 	if args == nil {
-		allConfigs := h.Config.AllConfigs()
+		allConfigs := handler.Config.AllConfigs()
 		configResult.Error = ""
 		configResult.Configs = make(map[string]interface{})
 		for k, v := range allConfigs {
@@ -201,7 +237,7 @@ func (h *Handler) GetConfig(args json.RawMessage) string {
 	var configs = make(map[string]interface{})
 
 	for _, key := range keys {
-		v := h.Config.Get(key)
+		v := handler.Config.Get(key)
 		if v.Invalid {
 			continue
 		}

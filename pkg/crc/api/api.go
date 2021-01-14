@@ -5,38 +5,30 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"net/http"
+	"net/http/httptest"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
 
-func CreateServer(socketPath string, config newConfigFunc, machine newMachineFunc) (Server, error) {
+func CreateServer(socketPath string, handlerFactory http.Handler) (Server, error) {
 	listener, err := net.Listen("unix", socketPath)
 	if err != nil {
 		logging.Error("Failed to create socket: ", err.Error())
 		return Server{}, err
 	}
-	return createServerWithListener(listener, config, machine)
+	return createServerWithListener(listener, handlerFactory)
 }
 
-func createServerWithListener(listener net.Listener, config newConfigFunc, machine newMachineFunc) (Server, error) {
-	apiServer := Server{
+func createServerWithListener(listener net.Listener, handler http.Handler) (Server, error) {
+	return Server{
 		listener:               listener,
 		clusterOpsRequestsChan: make(chan clusterOpsRequest, 10),
-		handlerFactory: func() (RequestHandler, error) {
-			cfg, err := config()
-			if err != nil {
-				return nil, err
-			}
-			return &Handler{
-				Config:        cfg,
-				MachineClient: &Adapter{Underlying: machine(cfg)},
-			}, nil
-		},
-	}
-	return apiServer, nil
+		mux:                    handler,
+	}, nil
 }
 
-func (api Server) Serve() error {
+func (api *Server) Serve() error {
 	go api.handleClusterOperations() // go routine that handles start, stop and delete calls
 	for {
 		conn, err := api.listener.Accept()
@@ -51,50 +43,30 @@ func (api Server) Serve() error {
 	}
 }
 
-func (api Server) handleClusterOperations() {
+func (api *Server) handleClusterOperations() {
 	for req := range api.clusterOpsRequestsChan {
 		api.handleRequest(req.command, req.socket)
 	}
 }
 
-func (api Server) handleRequest(req commandRequest, conn net.Conn) {
+func (api *Server) handleRequest(req commandRequest, conn net.Conn) {
 	defer conn.Close()
 	var result string
 
-	handler, err := api.handlerFactory()
+	recorder := httptest.NewRecorder()
+	httpReq, err := http.NewRequest("GET", fmt.Sprintf("/%s", req.Command), bytes.NewReader(req.Args))
 	if err != nil {
 		logging.Error(err.Error())
 		result = encodeErrorToJSON(fmt.Sprintf("Failed to initialize new config store: %v", err))
 		writeStringToSocket(conn, result)
 		return
 	}
+	api.mux.ServeHTTP(recorder, httpReq)
 
-	switch req.Command {
-	case "start":
-		result = handler.Start(req.Args)
-	case "stop":
-		result = handler.Stop()
-	case "status":
-		result = handler.Status()
-	case "delete":
-		result = handler.Delete()
-	case "version":
-		result = handler.GetVersion()
-	case "setconfig":
-		result = handler.SetConfig(req.Args)
-	case "unsetconfig":
-		result = handler.UnsetConfig(req.Args)
-	case "getconfig":
-		result = handler.GetConfig(req.Args)
-	case "webconsoleurl":
-		result = handler.GetWebconsoleInfo()
-	default:
-		result = encodeErrorToJSON(fmt.Sprintf("Unknown command supplied: %s", req.Command))
-	}
-	writeStringToSocket(conn, result)
+	writeStringToSocket(conn, recorder.Body.String())
 }
 
-func (api Server) handleConnections(conn net.Conn) {
+func (api *Server) handleConnections(conn net.Conn) {
 	inBuffer := make([]byte, 1024)
 	var req commandRequest
 	numBytes, err := conn.Read(inBuffer)
@@ -125,14 +97,8 @@ func (api Server) handleConnections(conn net.Conn) {
 			writeStringToSocket(conn, errMsg)
 			conn.Close()
 		}
-
-	case "status", "version", "setconfig", "getconfig", "unsetconfig", "webconsoleurl":
-		go api.handleRequest(req, conn)
-
 	default:
-		err := encodeErrorToJSON(fmt.Sprintf("Unknown command supplied: %s", req.Command))
-		writeStringToSocket(conn, err)
-		conn.Close()
+		go api.handleRequest(req, conn)
 	}
 }
 

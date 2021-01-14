@@ -150,7 +150,26 @@ func newConfig() (crcConfig.Storage, error) {
 func runDaemon() error {
 	// Remove if an old socket is present
 	os.Remove(constants.DaemonSocketPath)
-	apiServer, err := api.CreateServer(constants.DaemonSocketPath, newConfig, newMachineWithConfig)
+
+	factory := func() (http.Handler, error) {
+		cfg, err := newConfig()
+		if err != nil {
+			return nil, err
+		}
+		return &api.Handler{
+			Config:        cfg,
+			MachineClient: &api.Adapter{Underlying: newMachineWithConfig(cfg)},
+		}, nil
+	}
+	handlerFunc := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handler, err := factory()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		handler.ServeHTTP(w, r)
+	})
+	apiServer, err := api.CreateServer(constants.DaemonSocketPath, handlerFunc)
 	if err != nil {
 		return err
 	}

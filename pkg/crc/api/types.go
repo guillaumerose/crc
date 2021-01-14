@@ -3,35 +3,24 @@ package api
 import (
 	"encoding/json"
 	"net"
+	"net/http"
 
 	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/machine"
 )
 
-type newHandlerFunc func() (RequestHandler, error)
 type newConfigFunc func() (config.Storage, error)
 type newMachineFunc func(config.Storage) machine.Client
+type newHandlerFunc func() (http.Handler, error)
 
 type commandError struct {
 	Err string
 }
 
 type Server struct {
-	handlerFactory         newHandlerFunc
+	mux                    http.Handler
 	listener               net.Listener
 	clusterOpsRequestsChan chan clusterOpsRequest
-}
-
-type RequestHandler interface {
-	Start(json.RawMessage) string
-	Stop() string
-	Status() string
-	Delete() string
-	GetVersion() string
-	SetConfig(json.RawMessage) string
-	UnsetConfig(json.RawMessage) string
-	GetConfig(json.RawMessage) string
-	GetWebconsoleInfo() string
 }
 
 // clusterOpsRequest struct is used to store the command request and associated socket
