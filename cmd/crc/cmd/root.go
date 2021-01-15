@@ -156,13 +156,7 @@ func newCombinedStorage() (*crcConfig.Config, *crcConfig.CombinedStorage, error)
 }
 
 func newMachine() machine.Client {
-	return newMachineWithConfig(config)
-}
-
-func newMachineWithConfig(config crcConfig.Storage) machine.Client {
-	networkMode := network.ParseMode(config.Get(cmdConfig.NetworkMode).AsString())
-	enableMonitoring := config.Get(cmdConfig.EnableClusterMonitoring).AsBool()
-	return machine.NewClient(constants.DefaultName, networkMode, enableMonitoring)
+	return machine.NewClient(constants.DefaultName, isDebugLog(), config)
 }
 
 func addForceFlag(cmd *cobra.Command) {
