@@ -35,7 +35,7 @@ var rootCmd = &cobra.Command{
 
 var (
 	globalForce   bool
-	viper         *crcConfig.ViperStorage
+	configStorage *crcConfig.CombinedStorage
 	config        *crcConfig.Config
 	segmentClient *segment.Client
 )
@@ -45,7 +45,7 @@ func init() {
 		logging.Fatal(err.Error())
 	}
 	var err error
-	config, viper, err = newViperConfig()
+	config, configStorage, err = newCombinedStorage()
 	if err != nil {
 		logging.Fatal(err.Error())
 	}
@@ -144,15 +144,15 @@ func trimTrailingEOL(s string) string {
 	return strings.TrimRight(s, "\n")
 }
 
-func newViperConfig() (*crcConfig.Config, *crcConfig.ViperStorage, error) {
-	viper, err := crcConfig.NewViperStorage(constants.ConfigPath, constants.CrcEnvPrefix)
+func newCombinedStorage() (*crcConfig.Config, *crcConfig.CombinedStorage, error) {
+	storage, err := crcConfig.NewCombinedStorage(constants.ConfigPath, constants.CrcEnvPrefix)
 	if err != nil {
 		return nil, nil, err
 	}
-	cfg := crcConfig.New(viper)
+	cfg := crcConfig.New(storage)
 	cmdConfig.RegisterSettings(cfg)
 	preflight.RegisterSettings(cfg)
-	return cfg, viper, nil
+	return cfg, storage, nil
 }
 
 func newMachine() machine.Client {

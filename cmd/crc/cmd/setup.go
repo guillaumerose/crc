@@ -24,9 +24,7 @@ var setupCmd = &cobra.Command{
 	Short: "Set up prerequisites for the OpenShift cluster",
 	Long:  "Set up local virtualization and networking infrastructure for the OpenShift cluster",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if err := viper.BindFlagSet(cmd.Flags()); err != nil {
-			return err
-		}
+		configStorage.LoadFlagSet(cmd.Flags())
 		return runSetup(args)
 	},
 }

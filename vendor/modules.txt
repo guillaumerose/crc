@@ -106,17 +106,6 @@ github.com/h2non/filetype
 github.com/h2non/filetype/matchers
 github.com/h2non/filetype/matchers/isobmff
 github.com/h2non/filetype/types
-# github.com/hashicorp/hcl v1.0.0
-github.com/hashicorp/hcl
-github.com/hashicorp/hcl/hcl/ast
-github.com/hashicorp/hcl/hcl/parser
-github.com/hashicorp/hcl/hcl/printer
-github.com/hashicorp/hcl/hcl/scanner
-github.com/hashicorp/hcl/hcl/strconv
-github.com/hashicorp/hcl/hcl/token
-github.com/hashicorp/hcl/json/parser
-github.com/hashicorp/hcl/json/scanner
-github.com/hashicorp/hcl/json/token
 # github.com/hectane/go-acl v0.0.0-20190604041725-da78bae5fc95
 ## explicit
 github.com/hectane/go-acl
@@ -130,14 +119,20 @@ github.com/inconshreveable/mousetrap
 github.com/json-iterator/go
 # github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 github.com/kballard/go-shellquote
+# github.com/knadh/koanf v0.15.0
+## explicit
+github.com/knadh/koanf
+github.com/knadh/koanf/maps
+github.com/knadh/koanf/parsers/json
+github.com/knadh/koanf/providers/confmap
+github.com/knadh/koanf/providers/env
+github.com/knadh/koanf/providers/file
+github.com/knadh/koanf/providers/posflag
 # github.com/libvirt/libvirt-go-xml v6.10.0+incompatible
 ## explicit
 github.com/libvirt/libvirt-go-xml
 # github.com/linuxkit/virtsock v0.0.0-20180830132707-8e79449dea07
 github.com/linuxkit/virtsock/pkg/hvsock
-# github.com/magiconair/properties v1.8.4
-## explicit
-github.com/magiconair/properties
 # github.com/mattn/go-colorable v0.1.8
 ## explicit
 github.com/mattn/go-colorable
@@ -182,7 +177,6 @@ github.com/pbnjay/memory
 github.com/pborman/uuid
 # github.com/pelletier/go-toml v1.8.1
 ## explicit
-github.com/pelletier/go-toml
 # github.com/pkg/browser v0.0.0-20201207095918-0426ae3fba23
 ## explicit
 github.com/pkg/browser
@@ -200,30 +194,19 @@ github.com/segmentio/backo-go
 # github.com/sirupsen/logrus v1.7.0
 ## explicit
 github.com/sirupsen/logrus
-# github.com/spf13/afero v1.4.1
-## explicit
-github.com/spf13/afero
-github.com/spf13/afero/mem
 # github.com/spf13/cast v1.3.1
 ## explicit
 github.com/spf13/cast
 # github.com/spf13/cobra v1.1.1
 ## explicit
 github.com/spf13/cobra
-# github.com/spf13/jwalterweatherman v1.1.0
-github.com/spf13/jwalterweatherman
 # github.com/spf13/pflag v1.0.5
 ## explicit
 github.com/spf13/pflag
-# github.com/spf13/viper v1.7.1
-## explicit
-github.com/spf13/viper
 # github.com/stretchr/testify v1.7.0
 ## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
-# github.com/subosito/gotenv v1.2.0
-github.com/subosito/gotenv
 # github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
 ## explicit
 github.com/xi2/xz
@@ -329,9 +312,6 @@ gopkg.in/AlecAivazis/survey.v1/core
 gopkg.in/AlecAivazis/survey.v1/terminal
 # gopkg.in/inf.v0 v0.9.1
 gopkg.in/inf.v0
-# gopkg.in/ini.v1 v1.62.0
-## explicit
-gopkg.in/ini.v1
 # gopkg.in/yaml.v2 v2.4.0
 ## explicit
 gopkg.in/yaml.v2

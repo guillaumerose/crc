@@ -148,7 +148,7 @@ func run(configuration *types.Configuration, endpoints []string) error {
 }
 
 func newConfig() (crcConfig.Storage, error) {
-	config, _, err := newViperConfig()
+	config, _, err := newCombinedStorage()
 	return config, err
 }
 

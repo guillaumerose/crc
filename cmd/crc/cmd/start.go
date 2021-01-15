@@ -43,9 +43,7 @@ var startCmd = &cobra.Command{
 	Short: "Start the OpenShift cluster",
 	Long:  "Start the OpenShift cluster",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if err := viper.BindFlagSet(cmd.Flags()); err != nil {
-			return err
-		}
+		configStorage.LoadFlagSet(cmd.Flags())
 		if err := renderStartResult(runStart(args)); err != nil {
 			return err
 		}
