@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/code-ready/crc/pkg/crc/adminhelper"
 	"github.com/code-ready/crc/pkg/crc/cache"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
@@ -50,6 +51,11 @@ var genericPreflightChecks = [...]Check{
 	{
 		cleanupDescription: "Removing CRC Machine Instance directory",
 		cleanup:            removeCRCMachinesDir,
+		flags:              CleanUpOnly,
+	},
+	{
+		cleanupDescription: "Removing hosts file records added by CRC",
+		cleanup:            adminhelper.CleanHostsFile,
 		flags:              CleanUpOnly,
 	},
 	{

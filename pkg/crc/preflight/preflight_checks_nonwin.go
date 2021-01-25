@@ -7,7 +7,6 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/code-ready/crc/pkg/crc/adminhelper"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	crcos "github.com/code-ready/crc/pkg/os"
 )
@@ -19,11 +18,6 @@ var nonWinPreflightChecks = [...]Check{
 		check:            checkIfRunningAsNormalUser,
 		fixDescription:   "crc should be ran as a normal user",
 		flags:            NoFix,
-	},
-	{
-		cleanupDescription: "Removing hosts file records added by CRC",
-		cleanup:            adminhelper.CleanHostsFile,
-		flags:              CleanUpOnly,
 	},
 }
 
