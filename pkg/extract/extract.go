@@ -24,6 +24,7 @@ const minSizeForProgressBar = 100_000_000
 type Options struct {
 	ShowProgress bool
 	FileFilter   func(string) bool
+	Flatten      bool
 }
 
 func Uncompress(tarball, targetDir string, options *Options) ([]string, error) {
@@ -110,7 +111,12 @@ func untar(reader io.Reader, targetDir string, options *Options) ([]string, erro
 		}
 
 		// the target location where the dir/file should be created
-		path, err := buildPath(targetDir, header.Name)
+		headerName := header.Name
+		if options.Flatten {
+			headerName = filepath.Base(headerName)
+		}
+
+		path, err := buildPath(targetDir, headerName)
 		if err != nil {
 			return nil, err
 		}
@@ -125,6 +131,9 @@ func untar(reader io.Reader, targetDir string, options *Options) ([]string, erro
 
 		// if its a dir and it doesn't exist create it
 		case tar.TypeDir:
+			if options.Flatten {
+				continue
+			}
 			if err := os.MkdirAll(path, header.FileInfo().Mode()); err != nil {
 				return nil, err
 			}
@@ -182,7 +191,11 @@ func unzip(archive, target string, options *Options) ([]string, error) {
 	}
 
 	for _, file := range reader.File {
-		path, err := buildPath(target, file.Name)
+		fileName := file.Name
+		if options.Flatten {
+			fileName = filepath.Base(fileName)
+		}
+		path, err := buildPath(target, fileName)
 		if err != nil {
 			return nil, err
 		}
@@ -192,6 +205,9 @@ func unzip(archive, target string, options *Options) ([]string, error) {
 			continue
 		}
 		if file.FileInfo().IsDir() {
+			if options.Flatten {
+				continue
+			}
 			err = os.MkdirAll(path, file.Mode())
 			if err != nil {
 				return nil, err

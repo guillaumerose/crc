@@ -52,6 +52,28 @@ func TestUnCompressBundle(t *testing.T) {
 	}
 }
 
+func TestFlattenUncompress(t *testing.T) {
+	for _, archive := range archives {
+		testUncompressFlatten(t, filepath.Join("testdata", archive))
+	}
+}
+
+func testUncompressFlatten(t *testing.T, bundle string) {
+	destDir, err := ioutil.TempDir("", "crc-extract-test")
+	require.NoError(t, err)
+	defer os.RemoveAll(destDir)
+
+	fileList, err := Uncompress(bundle, destDir, &Options{
+		ShowProgress: false,
+		Flatten:      true,
+	})
+	require.NoError(t, err)
+
+	assert.Len(t, fileList, 2)
+	assert.Contains(t, fileList, filepath.Join(destDir, "c.txt"))
+	assert.Contains(t, fileList, filepath.Join(destDir, "e.txt"))
+}
+
 func copyFileMap(orig fileMap) fileMap {
 	copy := fileMap{}
 	for key, value := range orig {
