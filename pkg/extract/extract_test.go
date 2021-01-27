@@ -136,12 +136,9 @@ func testUncompress(archiveName string, fileFilter func(string) bool, files file
 	}
 	defer os.RemoveAll(destDir)
 
-	var fileList []string
-	if fileFilter != nil {
-		fileList, err = UncompressWithFilter(archiveName, destDir, false, fileFilter)
-	} else {
-		fileList, err = Uncompress(archiveName, destDir, false)
-	}
+	fileList, err := Uncompress(archiveName, destDir, &Options{
+		FileFilter: fileFilter,
+	})
 	if err != nil {
 		return err
 	}

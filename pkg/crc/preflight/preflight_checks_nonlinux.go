@@ -43,7 +43,7 @@ func downloadOrExtractTrayApp(url, destDir string) error {
 	if err != nil {
 		return errors.Wrap(err, "Cannot create the target directory.")
 	}
-	_, err = extract.Uncompress(trayDestFileName, destDir, false)
+	_, err = extract.Uncompress(trayDestFileName, destDir, &extract.Options{})
 	if err != nil {
 		return errors.Wrapf(err, "Cannot uncompress '%s'", trayDestFileName)
 	}
