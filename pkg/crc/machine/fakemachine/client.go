@@ -19,7 +19,8 @@ func NewFailingClient() *Client {
 }
 
 type Client struct {
-	Failing bool
+	DontExist bool
+	Failing   bool
 }
 
 var DummyClusterConfig = machine.ClusterConfig{
@@ -98,5 +99,5 @@ func (c *Client) Status() (*machine.ClusterStatusResult, error) {
 }
 
 func (c *Client) Exists() (bool, error) {
-	return true, nil
+	return !c.DontExist, nil
 }

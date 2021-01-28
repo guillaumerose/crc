@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -58,24 +59,43 @@ func runDelete(writer io.Writer, client machine.Client, clearCache bool, cacheDi
 	machineDeleted, err := deleteMachine(client, clearCache, cacheDir, interactive, force)
 	return render(&deleteResult{
 		Success:        err == nil,
-		Error:          errorMessage(err),
+		Error:          eventualSerializableError(err),
 		machineDeleted: machineDeleted,
 	}, writer, outputFormat)
 }
 
 type deleteResult struct {
-	Success        bool   `json:"success"`
-	Error          string `json:"error,omitempty"`
+	Success        bool               `json:"success"`
+	Error          *SerializableError `json:"error,omitempty"`
 	machineDeleted bool
 }
 
 func (s *deleteResult) prettyPrintTo(writer io.Writer) error {
-	if s.Error != "" {
-		return errors.New(s.Error)
+	if s.Error != nil {
+		return s.Error
 	}
 	var err error
 	if s.machineDeleted {
 		_, err = fmt.Fprintln(writer, "Deleted the OpenShift cluster")
 	}
 	return err
+}
+
+func eventualSerializableError(err error) *SerializableError {
+	if err == nil {
+		return nil
+	}
+	return &SerializableError{err}
+}
+
+type SerializableError struct {
+	error
+}
+
+func (e SerializableError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(e.Error())
+}
+
+func (e *SerializableError) Unwrap() error {
+	return e.error
 }

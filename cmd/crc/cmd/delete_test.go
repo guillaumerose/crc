@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"errors"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -48,4 +49,22 @@ func TestJSONDelete(t *testing.T) {
 
 	_, err = os.Stat(cacheDir)
 	assert.True(t, os.IsNotExist(err))
+}
+
+func TestFailingPlainDelete(t *testing.T) {
+	cacheDir, err := ioutil.TempDir("", "cache")
+	require.NoError(t, err)
+	defer os.RemoveAll(cacheDir)
+
+	out := new(bytes.Buffer)
+	client := fakemachine.NewClient()
+	client.DontExist = true
+
+	err = runDelete(out, client, true, cacheDir, true, true, "")
+
+	var e1 *VirtualMachineNotFound
+	assert.True(t, errors.As(err, &e1))
+	var e2 *SerializableError
+	assert.True(t, errors.As(err, &e2))
+	assert.EqualError(t, err, "Machine does not exist. Use 'crc start' to create it")
 }

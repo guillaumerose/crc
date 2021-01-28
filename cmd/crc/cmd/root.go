@@ -99,9 +99,15 @@ func checkIfMachineMissing(client machine.Client) error {
 		return err
 	}
 	if !exists {
-		return fmt.Errorf("Machine '%s' does not exist. Use 'crc start' to create it", client.GetName())
+		return &VirtualMachineNotFound{}
 	}
 	return nil
+}
+
+type VirtualMachineNotFound struct{}
+
+func (m *VirtualMachineNotFound) Error() string {
+	return "Machine does not exist. Use 'crc start' to create it"
 }
 
 func setProxyDefaults() error {
