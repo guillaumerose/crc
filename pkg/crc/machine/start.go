@@ -255,7 +255,6 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Error getting proxy configuration")
 	}
-	proxyConfig.ApplyToEnvironment()
 	proxyConfig.AddNoProxy(instanceIP)
 
 	// Create servicePostStartConfig for DNS checks and DNS start.
