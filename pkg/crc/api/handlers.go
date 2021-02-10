@@ -3,14 +3,16 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
-	"github.com/code-ready/crc/pkg/crc/errors"
+	crcErrors "github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/code-ready/crc/pkg/crc/machine/bundle"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/version"
 )
@@ -51,8 +53,14 @@ func (h *Handler) Start(args json.RawMessage) string {
 		return encodeStructToJSON(startErr)
 	}
 
-	startConfig := getStartConfig(h.Config, parsedArgs)
-	status := h.MachineClient.Start(startConfig)
+	startConfig, err := getStartConfig(h.Config, parsedArgs)
+	if err != nil {
+		return encodeStructToJSON(&StartResult{
+			Name:  h.MachineClient.GetName(),
+			Error: fmt.Sprintf("Cannot find a bundle: %s", err.Error()),
+		})
+	}
+	status := h.MachineClient.Start(*startConfig)
 	return encodeStructToJSON(status)
 }
 
@@ -66,14 +74,21 @@ func parseStartArgs(args json.RawMessage) (startArgs, error) {
 	return parsedArgs, nil
 }
 
-func getStartConfig(cfg crcConfig.Storage, args startArgs) machine.StartConfig {
-	return machine.StartConfig{
-		BundlePath: cfg.Get(config.Bundle).AsString(),
+func getStartConfig(cfg crcConfig.Storage, args startArgs) (*machine.StartConfig, error) {
+	bundles, err := bundle.List()
+	if err != nil {
+		return nil, err
+	}
+	if len(bundles) == 0 {
+		return nil, errors.New("no bundle installed")
+	}
+	return &machine.StartConfig{
+		BundlePath: bundles[0].Name,
 		Memory:     cfg.Get(config.Memory).AsInt(),
 		CPUs:       cfg.Get(config.CPUs).AsInt(),
 		NameServer: cfg.Get(config.NameServer).AsString(),
 		PullSecret: cluster.NewNonInteractivePullSecretLoader(cfg, args.PullSecretFile),
-	}
+	}, nil
 }
 
 type VersionResult struct {
@@ -110,7 +125,7 @@ func (h *Handler) SetConfig(args json.RawMessage) string {
 		return encodeStructToJSON(setConfigResult)
 	}
 
-	var multiError = errors.MultiError{}
+	var multiError = crcErrors.MultiError{}
 	var a = make(map[string]interface{})
 
 	err := json.Unmarshal(args, &a)
@@ -148,7 +163,7 @@ func (h *Handler) UnsetConfig(args json.RawMessage) string {
 		return encodeStructToJSON(unsetConfigResult)
 	}
 
-	var multiError = errors.MultiError{}
+	var multiError = crcErrors.MultiError{}
 	var keys = make(map[string][]string)
 
 	err := json.Unmarshal(args, &keys)
