@@ -8,6 +8,7 @@ import (
 	"github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/cluster"
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
@@ -68,7 +69,7 @@ func parseStartArgs(args json.RawMessage) (startArgs, error) {
 
 func getStartConfig(cfg crcConfig.Storage, args startArgs) machine.StartConfig {
 	return machine.StartConfig{
-		BundlePath: cfg.Get(config.Bundle).AsString(),
+		BundlePath: constants.DefaultBundlePath,
 		Memory:     cfg.Get(config.Memory).AsInt(),
 		CPUs:       cfg.Get(config.CPUs).AsInt(),
 		NameServer: cfg.Get(config.NameServer).AsString(),
