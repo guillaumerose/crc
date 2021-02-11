@@ -83,7 +83,7 @@ func getStartConfig(cfg crcConfig.Storage, args startArgs) (*machine.StartConfig
 		return nil, errors.New("no bundle installed")
 	}
 	return &machine.StartConfig{
-		BundlePath: bundles[0].Name,
+		BundleName: bundles[0].Name,
 		Memory:     cfg.Get(config.Memory).AsInt(),
 		CPUs:       cfg.Get(config.CPUs).AsInt(),
 		NameServer: cfg.Get(config.NameServer).AsString(),

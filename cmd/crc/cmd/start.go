@@ -68,7 +68,7 @@ func runStart(ctx context.Context) (*machine.StartResult, error) {
 	telemetry.SetContextProperty(ctx, cmdConfig.DiskSize, uint64(config.Get(cmdConfig.DiskSize).AsInt())*1024*1024*1024)
 
 	startConfig := machine.StartConfig{
-		BundlePath: bundle,
+		BundleName: bundle,
 		Memory:     config.Get(cmdConfig.Memory).AsInt(),
 		DiskSize:   config.Get(cmdConfig.DiskSize).AsInt(),
 		CPUs:       config.Get(cmdConfig.CPUs).AsInt(),

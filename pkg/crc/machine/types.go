@@ -8,7 +8,7 @@ import (
 
 type StartConfig struct {
 	// CRC system bundle
-	BundlePath string
+	BundleName string
 
 	// Hypervisor
 	Memory   int // Memory size in MiB

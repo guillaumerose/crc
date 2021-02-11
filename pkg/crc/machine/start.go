@@ -34,18 +34,6 @@ import (
 
 const minimumMemoryForMonitoring = 14336
 
-func getCrcBundleInfo(bundlePath string) (*bundle.CrcBundleInfo, error) {
-	bundleName := filepath.Base(bundlePath)
-	bundleInfo, err := bundle.GetCachedBundleInfo(bundleName)
-	if err == nil {
-		logging.Infof("Loading bundle: %s ...", bundleName)
-		return bundleInfo, nil
-	}
-	logging.Debugf("Failed to load bundle %s: %v", bundleName, err)
-	logging.Infof("Extracting bundle: %s ...", bundleName)
-	return bundle.Extract(bundlePath)
-}
-
 func (client *client) updateVMConfig(startConfig StartConfig, api libmachine.API, host *host.Host) error {
 	/* Memory */
 	logging.Debugf("Updating CRC VM configuration")
@@ -112,14 +100,14 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 
 		machineConfig := config.MachineConfig{
 			Name:        client.name,
-			BundleName:  filepath.Base(startConfig.BundlePath),
+			BundleName:  startConfig.BundleName,
 			CPUs:        startConfig.CPUs,
 			Memory:      startConfig.Memory,
 			DiskSize:    startConfig.DiskSize,
 			NetworkMode: client.networkMode(),
 		}
 
-		crcBundleMetadata, err = getCrcBundleInfo(startConfig.BundlePath)
+		crcBundleMetadata, err = bundle.GetCachedBundleInfo(startConfig.BundleName)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error getting bundle metadata")
 		}
@@ -149,11 +137,11 @@ func (client *client) Start(startConfig StartConfig) (*StartResult, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "Error loading bundle metadata")
 		}
-		if bundleName != filepath.Base(startConfig.BundlePath) {
+		if bundleName != startConfig.BundleName {
 			logging.Debugf("Bundle '%s' was requested, but the existing VM is using '%s'",
-				filepath.Base(startConfig.BundlePath), bundleName)
+				startConfig.BundleName, bundleName)
 			return nil, fmt.Errorf("Bundle '%s' was requested, but the existing VM is using '%s'",
-				filepath.Base(startConfig.BundlePath),
+				startConfig.BundleName,
 				bundleName)
 		}
 		vmState, err := host.Driver.GetState()
