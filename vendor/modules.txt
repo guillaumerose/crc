@@ -4,6 +4,10 @@ github.com/Azure/go-ansiterm/winterm
 # github.com/Masterminds/semver v1.5.0
 ## explicit
 github.com/Masterminds/semver
+# github.com/Microsoft/go-winio v0.4.15
+## explicit
+github.com/Microsoft/go-winio
+github.com/Microsoft/go-winio/pkg/guid
 # github.com/RangelReale/osincli v0.0.0-20160924135400-fababb0555f2
 github.com/RangelReale/osincli
 # github.com/VividCortex/ewma v1.1.1
@@ -28,6 +32,10 @@ github.com/cavaliercoder/grab
 ## explicit
 github.com/cheggaaa/pb/v3
 github.com/cheggaaa/pb/v3/termutil
+# github.com/code-ready/admin-helper v0.0.0-00010101000000-000000000000 => github.com/guillaumerose/admin-helper v0.0.0-20210217134427-dea613a7385a
+## explicit
+github.com/code-ready/admin-helper/pkg/client
+github.com/code-ready/admin-helper/pkg/types
 # github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a
 ## explicit
 github.com/code-ready/clicumber/testsuite
@@ -556,3 +564,4 @@ sigs.k8s.io/yaml
 # k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.19.0
 # k8s.io/sample-cli-plugin => k8s.io/sample-cli-plugin v0.19.0
 # k8s.io/sample-controller => k8s.io/sample-controller v0.19.0
+# github.com/code-ready/admin-helper => github.com/guillaumerose/admin-helper v0.0.0-20210217134427-dea613a7385a

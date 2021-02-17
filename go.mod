@@ -4,10 +4,12 @@ go 1.14
 
 require (
 	github.com/Masterminds/semver v1.5.0
+	github.com/Microsoft/go-winio v0.4.15
 	github.com/YourFin/binappend v0.0.0-20181105185800-0add4bf0b9ad
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
 	github.com/cavaliercoder/grab v2.0.0+incompatible
 	github.com/cheggaaa/pb/v3 v3.0.5
+	github.com/code-ready/admin-helper v0.0.0-00010101000000-000000000000
 	github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a
 	github.com/code-ready/gvisor-tap-vsock v0.0.0-20210128145517-e5f886c34c9f
 	github.com/code-ready/machine v0.0.0-20210122113819-281ccfbb4566
@@ -103,3 +105,5 @@ replace (
 	k8s.io/sample-cli-plugin => k8s.io/sample-cli-plugin v0.19.0
 	k8s.io/sample-controller => k8s.io/sample-controller v0.19.0
 )
+
+replace github.com/code-ready/admin-helper => github.com/guillaumerose/admin-helper v0.0.0-20210217134427-dea613a7385a
