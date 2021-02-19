@@ -21,23 +21,20 @@ func init() {
 
 var statusCmd = &cobra.Command{
 	Use:   "status",
-	Short: "Display status of the OpenShift cluster",
-	Long:  "Show details about the OpenShift cluster",
+	Short: "Display status of the virtual machine",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runStatus(os.Stdout, newMachine(), constants.MachineCacheDir, outputFormat)
 	},
 }
 
 type status struct {
-	Success          bool                         `json:"success"`
-	Error            *crcErrors.SerializableError `json:"error,omitempty"`
-	CrcStatus        string                       `json:"crcStatus,omitempty"`
-	OpenShiftStatus  string                       `json:"openshiftStatus,omitempty"`
-	OpenShiftVersion string                       `json:"openshiftVersion,omitempty"`
-	DiskUsage        int64                        `json:"diskUsage,omitempty"`
-	DiskSize         int64                        `json:"diskSize,omitempty"`
-	CacheUsage       int64                        `json:"cacheUsage,omitempty"`
-	CacheDir         string                       `json:"cacheDir,omitempty"`
+	Success      bool                         `json:"success"`
+	Error        *crcErrors.SerializableError `json:"error,omitempty"`
+	PodmanStatus string                       `json:"crcStatus,omitempty"`
+	DiskUsage    int64                        `json:"diskUsage,omitempty"`
+	DiskSize     int64                        `json:"diskSize,omitempty"`
+	CacheUsage   int64                        `json:"cacheUsage,omitempty"`
+	CacheDir     string                       `json:"cacheDir,omitempty"`
 }
 
 func runStatus(writer io.Writer, client machine.Client, cacheDir, outputFormat string) error {
@@ -66,14 +63,12 @@ func getStatus(client machine.Client, cacheDir string) *status {
 	}
 
 	return &status{
-		Success:          true,
-		CrcStatus:        clusterStatus.CrcStatus.String(),
-		OpenShiftStatus:  clusterStatus.OpenshiftStatus,
-		OpenShiftVersion: clusterStatus.OpenshiftVersion,
-		DiskUsage:        clusterStatus.DiskUse,
-		DiskSize:         clusterStatus.DiskSize,
-		CacheUsage:       size,
-		CacheDir:         cacheDir,
+		Success:      true,
+		PodmanStatus: clusterStatus.CrcStatus.String(),
+		DiskUsage:    clusterStatus.DiskUse,
+		DiskSize:     clusterStatus.DiskSize,
+		CacheUsage:   size,
+		CacheDir:     cacheDir,
 	}
 }
 
@@ -86,8 +81,7 @@ func (s *status) prettyPrintTo(writer io.Writer) error {
 	lines := []struct {
 		left, right string
 	}{
-		{"CRC VM", s.CrcStatus},
-		{"OpenShift", openshiftStatus(s)},
+		{"Podman VM", s.PodmanStatus},
 		{"Disk Usage", fmt.Sprintf(
 			"%s of %s (Inside the CRC VM)",
 			units.HumanSize(float64(s.DiskUsage)),
@@ -101,13 +95,6 @@ func (s *status) prettyPrintTo(writer io.Writer) error {
 		}
 	}
 	return w.Flush()
-}
-
-func openshiftStatus(status *status) string {
-	if status.OpenShiftVersion != "" {
-		return fmt.Sprintf("%s (v%s)", status.OpenShiftStatus, status.OpenShiftVersion)
-	}
-	return status.OpenShiftStatus
 }
 
 func printLine(w *tabwriter.Writer, left string, right string) error {

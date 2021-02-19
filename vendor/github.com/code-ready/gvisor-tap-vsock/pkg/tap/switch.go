@@ -125,8 +125,36 @@ func (e *Switch) connect(conn net.Conn) (int, bool) {
 }
 
 func (e *Switch) handshake(conn net.Conn, vm string) error {
+	sizeBuf := make([]byte, 2)
+	n, err := io.ReadFull(conn, sizeBuf)
+	if err != nil {
+		return errors.Wrap(err, "cannot read size from socket")
+	}
+	if n != 2 {
+		return fmt.Errorf("unexpected size %d", n)
+	}
+	readSize := int(binary.LittleEndian.Uint16(sizeBuf[0:2]))
+
+	buf := make([]byte, readSize)
+	n, err = io.ReadFull(conn, buf)
+	if err != nil {
+		return errors.Wrap(err, "cannot read packet from socket")
+	}
+	if n == 0 || n != readSize {
+		return fmt.Errorf("unexpected size %d != %d", n, readSize)
+	}
+	var req types.HandshakeRequest
+	if err := json.Unmarshal(buf, &req); err != nil {
+		return err
+	}
+	log.Infof("received handshake: %v", req)
+
+	if req.DeviceType != types.TAP {
+		return errors.New("unsupported device type")
+	}
+
 	log.Infof("assigning %s to %s", vm, conn.RemoteAddr().String())
-	bin, err := json.Marshal(&types.Handshake{
+	bin, err := json.Marshal(&types.HandshakeResponse{
 		MTU:     e.maxTransmissionUnit,
 		Gateway: e.gatewayIP,
 		VM:      vm,
@@ -134,9 +162,9 @@ func (e *Switch) handshake(conn net.Conn, vm string) error {
 	if err != nil {
 		return err
 	}
-	size := make([]byte, 2)
-	binary.LittleEndian.PutUint16(size, uint16(len(bin)))
-	if _, err := conn.Write(size); err != nil {
+	writeSize := make([]byte, 2)
+	binary.LittleEndian.PutUint16(writeSize, uint16(len(bin)))
+	if _, err := conn.Write(writeSize); err != nil {
 		return err
 	}
 	if _, err := conn.Write(bin); err != nil {

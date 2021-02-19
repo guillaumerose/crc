@@ -55,13 +55,6 @@ var resolverPreflightChecks = [...]Check{
 
 var traySetupChecks = [...]Check{
 	{
-		checkDescription: "Checking if tray executable is installed",
-		check:            checkTrayExecutablePresent,
-		fixDescription:   "Installing and setting up tray",
-		fix:              fixTrayExecutablePresent,
-		flags:            SetupOnly,
-	},
-	{
 		checkDescription:   "Checking if launchd configuration for daemon exists",
 		check:              checkIfDaemonPlistFileExists,
 		fixDescription:     "Creating launchd configuration for daemon",
@@ -80,13 +73,6 @@ var traySetupChecks = [...]Check{
 		cleanup:            removeTrayPlistFile,
 	},
 	{
-		checkDescription: "Checking installed tray version",
-		check:            checkTrayVersion,
-		fixDescription:   "Installing and setting up tray app",
-		fix:              fixTrayVersion,
-		flags:            SetupOnly,
-	},
-	{
 		checkDescription:   "Checking if CodeReady Containers daemon is running",
 		check:              checkIfDaemonAgentRunning,
 		fixDescription:     "Starting CodeReady Containers daemon",
@@ -94,15 +80,6 @@ var traySetupChecks = [...]Check{
 		flags:              SetupOnly,
 		cleanupDescription: "Unload CodeReady Containers daemon",
 		cleanup:            unLoadDaemonAgent,
-	},
-	{
-		checkDescription:   "Check if CodeReady Containers tray is running",
-		check:              checkIfTrayAgentRunning,
-		fixDescription:     "Starting CodeReady Containers tray",
-		fix:                fixTrayAgentRunning,
-		flags:              SetupOnly,
-		cleanupDescription: "Unload CodeReady Containers tray",
-		cleanup:            unLoadTrayAgent,
 	},
 }
 
@@ -122,9 +99,7 @@ func getPreflightChecks(experimentalFeatures bool, mode network.Mode) []Check {
 		checks = append(checks, resolverPreflightChecks[:]...)
 	}
 	// Experimental feature
-	if experimentalFeatures {
-		checks = append(checks, traySetupChecks[:]...)
-	}
+	checks = append(checks, traySetupChecks[:]...)
 
 	checks = append(checks, bundleCheck)
 	return checks

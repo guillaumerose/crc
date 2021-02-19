@@ -1,6 +1,18 @@
 package types
 
-type Handshake struct {
+type DeviceType string
+
+const (
+	TAP DeviceType = "tap"
+	TUN DeviceType = "tun"
+)
+
+type HandshakeRequest struct {
+	Hostname   string     `json:"hostname"`
+	DeviceType DeviceType `json:"device_type"`
+}
+
+type HandshakeResponse struct {
 	MTU     int    `json:"mtu"`
 	Gateway string `json:"gateway"`
 	VM      string `json:"vm"`

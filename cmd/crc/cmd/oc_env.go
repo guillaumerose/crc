@@ -44,6 +44,6 @@ func runOcEnv(args []string) error {
 }
 
 func init() {
-	rootCmd.AddCommand(ocEnvCmd)
+	// rootCmd.AddCommand(ocEnvCmd)
 	ocEnvCmd.Flags().StringVar(&forceShell, "shell", "", "Set the environment for the specified shell: [fish, cmd, powershell, tcsh, bash, zsh]. Default is auto-detect.")
 }

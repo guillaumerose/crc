@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/code-ready/crc/pkg/crc/adminhelper"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/errors"
 	"github.com/code-ready/crc/pkg/crc/network"
@@ -121,8 +120,5 @@ func CheckCRCPublicDNSReachable(serviceConfig services.ServicePostStartConfig) (
 }
 
 func addOpenShiftHosts(serviceConfig services.ServicePostStartConfig) error {
-	return adminhelper.UpdateHostsFile(serviceConfig.IP, serviceConfig.BundleMetadata.GetAPIHostname(),
-		serviceConfig.BundleMetadata.GetAppHostname("oauth-openshift"),
-		serviceConfig.BundleMetadata.GetAppHostname("console-openshift-console"),
-		serviceConfig.BundleMetadata.GetAppHostname("default-route-openshift-image-registry"))
+	return nil
 }

@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(ipCmd)
+	// rootCmd.AddCommand(ipCmd)
 }
 
 var ipCmd = &cobra.Command{

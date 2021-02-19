@@ -21,8 +21,7 @@ func init() {
 
 var setupCmd = &cobra.Command{
 	Use:   "setup",
-	Short: "Set up prerequisites for the OpenShift cluster",
-	Long:  "Set up local virtualization and networking infrastructure for the OpenShift cluster",
+	Short: "Set up prerequisites",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if err := viper.BindFlagSet(cmd.Flags()); err != nil {
 			return err
@@ -33,8 +32,8 @@ var setupCmd = &cobra.Command{
 
 func runSetup(arguments []string) error {
 	if config.Get(cmdConfig.ConsentTelemetry).AsString() == "" {
-		fmt.Println("CodeReady Containers is constantly improving and we would like to know more about usage (more details at https://developers.redhat.com/article/tool-data-collection)")
-		fmt.Println("Your preference can be changed manually if desired using 'crc config set consent-telemetry <yes/no>'")
+		fmt.Println("Podman Desktop is constantly improving and we would like to know more about usage (more details at https://developers.redhat.com/article/tool-data-collection)")
+		fmt.Println("Your preference can be changed manually if desired using 'podman-machine config set consent-telemetry <yes/no>'")
 		if input.PromptUserForYesOrNo("Would you like to contribute anonymous usage statistics", false) {
 			if _, err := config.Set(cmdConfig.ConsentTelemetry, "yes"); err != nil {
 				return err

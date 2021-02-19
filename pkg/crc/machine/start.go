@@ -19,11 +19,8 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine/config"
 	"github.com/code-ready/crc/pkg/crc/network"
 	"github.com/code-ready/crc/pkg/crc/oc"
-	"github.com/code-ready/crc/pkg/crc/services"
-	"github.com/code-ready/crc/pkg/crc/services/dns"
 	"github.com/code-ready/crc/pkg/crc/ssh"
 	crcssh "github.com/code-ready/crc/pkg/crc/ssh"
-	"github.com/code-ready/crc/pkg/crc/systemd"
 	"github.com/code-ready/crc/pkg/crc/telemetry"
 	"github.com/code-ready/crc/pkg/libmachine"
 	"github.com/code-ready/crc/pkg/libmachine/host"
@@ -113,12 +110,6 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 	if !exists {
 		telemetry.SetStartType(ctx, telemetry.CreationStartType)
 
-		// Ask early for pull secret if it hasn't been requested yet
-		_, err = startConfig.PullSecret.Value()
-		if err != nil {
-			return nil, errors.Wrap(err, "Failed to ask for pull secret")
-		}
-
 		machineConfig := config.MachineConfig{
 			Name:        client.name,
 			BundleName:  filepath.Base(startConfig.BundlePath),
@@ -133,7 +124,7 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 			return nil, errors.Wrap(err, "Error getting bundle metadata")
 		}
 
-		logging.Infof("Creating CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
+		logging.Infof("Creating virtual machine...")
 
 		// Retrieve metadata info
 		machineConfig.ImageSourcePath = crcBundleMetadata.GetDiskImagePath()
@@ -170,7 +161,7 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 			return nil, errors.Wrap(err, "Error getting the machine state")
 		}
 		if vmState == state.Running {
-			logging.Infof("A CodeReady Containers VM for OpenShift %s is already running", crcBundleMetadata.GetOpenshiftVersion())
+			logging.Infof("The virtual machine is already running")
 			clusterConfig, err := getClusterConfig(crcBundleMetadata)
 			if err != nil {
 				return nil, errors.Wrap(err, "Cannot create cluster configuration")
@@ -186,7 +177,7 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 
 		telemetry.SetStartType(ctx, telemetry.StartStartType)
 
-		logging.Infof("Starting CodeReady Containers VM for OpenShift %s...", crcBundleMetadata.GetOpenshiftVersion())
+		logging.Infof("Starting virtual machine...")
 
 		if err := client.updateVMConfig(startConfig, libMachineAPIClient, host); err != nil {
 			return nil, errors.Wrap(err, "Could not update CRC VM configuration")
@@ -214,7 +205,7 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 		return nil, errors.Wrap(err, "Error getting the state")
 	}
 	if vmState != state.Running {
-		return nil, errors.Wrap(err, "CodeReady Containers VM is not running")
+		return nil, errors.Wrap(err, "Virtual machine is not running")
 	}
 
 	instanceIP, err := getIP(host, client.useVSock())
@@ -231,7 +222,7 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 	if err := cluster.WaitForSSH(sshRunner); err != nil {
 		return nil, errors.Wrap(err, "Failed to connect to the CRC VM with SSH -- host might be unreachable")
 	}
-	logging.Info("CodeReady Containers VM is running")
+	logging.Info("Virtual machine is running")
 
 	// Post VM start immediately update SSH key and copy kubeconfig to instance
 	// dir and VM
@@ -244,6 +235,11 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 		return nil, errors.Wrap(err, "Error updating filesystem size")
 	}
 
+	err = sshRunner.CopyData([]byte("nameserver 192.168.127.1\nsearch crc.testing"), "/etc/resolv.conf", 0644)
+	if err != nil {
+		return nil, fmt.Errorf("Error creating /etc/resolv on instance: %s", err.Error())
+	}
+
 	// Start network time synchronization if `CRC_DEBUG_ENABLE_STOP_NTP` is not set
 	if stopNtp, _ := strconv.ParseBool(os.Getenv("CRC_DEBUG_ENABLE_STOP_NTP")); !stopNtp {
 		logging.Info("Starting network time synchronization in CodeReady Containers VM")
@@ -252,144 +248,6 @@ func (client *client) Start(ctx context.Context, startConfig StartConfig) (*Star
 		}
 	}
 
-	// Add nameserver to VM if provided by User
-	if startConfig.NameServer != "" {
-		if err = addNameServerToInstance(sshRunner, startConfig.NameServer); err != nil {
-			return nil, errors.Wrap(err, "Failed to add nameserver to the VM")
-		}
-	}
-
-	proxyConfig, err := getProxyConfig(crcBundleMetadata.ClusterInfo.BaseDomain)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error getting proxy configuration")
-	}
-	proxyConfig.ApplyToEnvironment()
-	proxyConfig.AddNoProxy(instanceIP)
-
-	// Create servicePostStartConfig for DNS checks and DNS start.
-	servicePostStartConfig := services.ServicePostStartConfig{
-		Name: client.name,
-		// TODO: would prefer passing in a more generic type
-		SSHRunner: sshRunner,
-		IP:        instanceIP,
-		// TODO: should be more finegrained
-		BundleMetadata: *crcBundleMetadata,
-		NetworkMode:    client.networkMode(),
-	}
-
-	// Run the DNS server inside the VM
-	if err := dns.RunPostStart(servicePostStartConfig); err != nil {
-		return nil, errors.Wrap(err, "Error running post start")
-	}
-
-	// Check DNS lookup before starting the kubelet
-	if queryOutput, err := dns.CheckCRCLocalDNSReachable(servicePostStartConfig); err != nil {
-		if !client.useVSock() {
-			return nil, errors.Wrapf(err, "Failed internal DNS query: %s", queryOutput)
-		}
-		logging.Warn(fmt.Sprintf("Failed internal DNS query: %s: %v", queryOutput, err))
-	}
-	logging.Info("Check internal and public DNS query ...")
-
-	if queryOutput, err := dns.CheckCRCPublicDNSReachable(servicePostStartConfig); err != nil {
-		logging.Warnf("Failed public DNS query from the cluster: %v : %s", err, queryOutput)
-	}
-
-	// Check DNS lookup from host to VM
-	logging.Info("Check DNS query from host ...")
-	if err := network.CheckCRCLocalDNSReachableFromHost(crcBundleMetadata, instanceIP); err != nil {
-		if !client.useVSock() {
-			return nil, errors.Wrap(err, "Failed to query DNS from host")
-		}
-		logging.Warn(fmt.Sprintf("Failed to query DNS from host: %v", err))
-	}
-
-	if err := cluster.EnsurePullSecretPresentOnInstanceDisk(sshRunner, startConfig.PullSecret); err != nil {
-		return nil, errors.Wrap(err, "Failed to update VM pull secret")
-	}
-
-	if err := ensureKubeletAndCRIOAreConfiguredForProxy(sshRunner, proxyConfig, instanceIP); err != nil {
-		return nil, errors.Wrap(err, "Failed to update proxy configuration of kubelet and crio")
-	}
-
-	// Check the certs validity inside the vm
-	logging.Info("Verifying validity of the kubelet certificates ...")
-	certsExpired, err := cluster.CheckCertsValidity(sshRunner)
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to check certificate validity")
-	}
-
-	logging.Info("Starting OpenShift kubelet service")
-	sd := systemd.NewInstanceSystemdCommander(sshRunner)
-	if err := sd.Start("kubelet"); err != nil {
-		return nil, errors.Wrap(err, "Error starting kubelet")
-	}
-
-	ocConfig := oc.UseOCWithSSH(sshRunner)
-
-	if err := cluster.ApproveCSRAndWaitForCertsRenewal(sshRunner, ocConfig, certsExpired[cluster.KubeletClientCert], certsExpired[cluster.KubeletServerCert]); err != nil {
-		logBundleDate(crcBundleMetadata)
-		return nil, errors.Wrap(err, "Failed to renew TLS certificates: please check if a newer CodeReady Containers release is available")
-	}
-
-	if err := cluster.WaitForAPIServer(ocConfig); err != nil {
-		return nil, errors.Wrap(err, "Error waiting for apiserver")
-	}
-
-	if err := ensureProxyIsConfiguredInOpenShift(ocConfig, sshRunner, proxyConfig, instanceIP); err != nil {
-		return nil, errors.Wrap(err, "Failed to update cluster proxy configuration")
-	}
-
-	if err := cluster.EnsurePullSecretPresentInTheCluster(ocConfig, startConfig.PullSecret); err != nil {
-		return nil, errors.Wrap(err, "Failed to update cluster pull secret")
-	}
-
-	if err := cluster.EnsureClusterIDIsNotEmpty(ocConfig); err != nil {
-		return nil, errors.Wrap(err, "Failed to update cluster ID")
-	}
-
-	if client.monitoringEnabled() {
-		logging.Info("Enabling cluster monitoring operator...")
-		if err := cluster.StartMonitoring(ocConfig); err != nil {
-			return nil, errors.Wrap(err, "Cannot start monitoring stack")
-		}
-	}
-
-	// In Openshift 4.3, when cluster comes up, the following happens
-	// 1. After the openshift-apiserver pod is started, its log contains multiple occurrences of `certificate has expired or is not yet valid`
-	// 2. Initially there is no request-header's client-ca crt available to `extension-apiserver-authentication` configmap
-	// 3. In the pod logs `missing content for CA bundle "client-ca::kube-system::extension-apiserver-authentication::requestheader-client-ca-file"`
-	// 4. After ~1 min /etc/kubernetes/static-pod-resources/kube-apiserver-certs/configmaps/aggregator-client-ca/ca-bundle.crt is regenerated
-	// 5. It is now also appear to `extension-apiserver-authentication` configmap as part of request-header's client-ca content
-	// 6. Openshift-apiserver is able to load the CA which was regenerated
-	// 7. Now apiserver pod log contains multiple occurrences of `error x509: certificate signed by unknown authority`
-	// When the openshift-apiserver is in this state, the cluster is non functional.
-	// A restart of the openshift-apiserver pod is enough to clear that error and get a working cluster.
-	// This is a work-around while the root cause is being identified.
-	// More info: https://bugzilla.redhat.com/show_bug.cgi?id=1795163
-	if certsExpired[cluster.AggregatorClientCert] {
-		logging.Debug("Waiting for the renewal of the request header client ca...")
-		if err := cluster.WaitForRequestHeaderClientCaFile(sshRunner); err != nil {
-			return nil, errors.Wrap(err, "Failed to wait for aggregator client ca renewal")
-		}
-
-		if err := cluster.DeleteOpenshiftAPIServerPods(ocConfig); err != nil {
-			return nil, errors.Wrap(err, "Cannot delete OpenShift API Server pods")
-		}
-	}
-
-	logging.Info("Starting OpenShift cluster ... [waiting 3m]")
-
-	time.Sleep(time.Minute * 3)
-
-	waitForProxyPropagation(ocConfig, proxyConfig)
-
-	logging.Info("Updating kubeconfig")
-	if err := eventuallyWriteKubeconfig(ocConfig, instanceIP, clusterConfig); err != nil {
-		logging.Warnf("Cannot update kubeconfig: %v", err)
-	}
-
-	logging.Warn("The cluster might report a degraded or error state. This is expected since several operators have been disabled to lower the resource usage. For more information, please consult the documentation")
 	return &StartResult{
 		KubeletStarted: true,
 		ClusterConfig:  *clusterConfig,

@@ -32,7 +32,7 @@ github.com/cheggaaa/pb/v3/termutil
 ## explicit
 github.com/code-ready/clicumber/testsuite
 github.com/code-ready/clicumber/util
-# github.com/code-ready/gvisor-tap-vsock v0.0.0-20210128145517-e5f886c34c9f
+# github.com/code-ready/gvisor-tap-vsock v0.0.0-20210128145517-e5f886c34c9f => github.com/guillaumerose/gvisor-tap-vsock v0.0.0-20210219105952-b106620b228e
 ## explicit
 github.com/code-ready/gvisor-tap-vsock/pkg/services/dns
 github.com/code-ready/gvisor-tap-vsock/pkg/services/forwarder
@@ -100,6 +100,7 @@ github.com/google/gofuzz
 github.com/google/gopacket
 github.com/google/gopacket/layers
 # github.com/google/tcpproxy v0.0.0-20200125044825-b6bb9b5b8252
+## explicit
 github.com/google/tcpproxy
 # github.com/google/uuid v1.1.2
 ## explicit
@@ -556,3 +557,4 @@ sigs.k8s.io/yaml
 # k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.19.0
 # k8s.io/sample-cli-plugin => k8s.io/sample-cli-plugin v0.19.0
 # k8s.io/sample-controller => k8s.io/sample-controller v0.19.0
+# github.com/code-ready/gvisor-tap-vsock => github.com/guillaumerose/gvisor-tap-vsock v0.0.0-20210219105952-b106620b228e

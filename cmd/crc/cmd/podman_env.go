@@ -45,6 +45,6 @@ func RunPodmanEnv(args []string) error {
 }
 
 func init() {
-	rootCmd.AddCommand(podmanEnvCmd)
+	// rootCmd.AddCommand(podmanEnvCmd)
 	podmanEnvCmd.Flags().StringVar(&forceShell, "shell", "", "Set the environment for the specified shell: [fish, cmd, powershell, tcsh, bash, zsh]. Default is auto-detect.")
 }

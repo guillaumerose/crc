@@ -162,8 +162,6 @@ github.com/cockroachdb/cockroach-go v0.0.0-20181001143604-e0a95dfd547c/go.mod h1
 github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:zn76sxSg3SzpJ0PPJaLDCu+Bu0Lg3sKTORVIj19EIF8=
 github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a h1:VOQmCj9Y8pAPU4C0rIvF2ByUBuuqnaR9JSvb9C8uBQE=
 github.com/code-ready/clicumber v0.0.0-20210201104241-cecb794bdf9a/go.mod h1:ZPZUcYGpv/FQGnwakUuhiHP9x/IIcU2SKbn8xPe4ROc=
-github.com/code-ready/gvisor-tap-vsock v0.0.0-20210128145517-e5f886c34c9f h1:Kntt85ZTGkDccmxfC7WU6VzLPJAPTcTn4bDqgS68nAY=
-github.com/code-ready/gvisor-tap-vsock v0.0.0-20210128145517-e5f886c34c9f/go.mod h1:DsNrkk0GUSTqt0E/4/GMvjqsP7ns++O/6YaJn/TDBVM=
 github.com/code-ready/machine v0.0.0-20210122113819-281ccfbb4566 h1:zBDinebc2kFq99UNTmLmTRfgxcxC6YieKQuXDRCljzw=
 github.com/code-ready/machine v0.0.0-20210122113819-281ccfbb4566/go.mod h1:4JgMqho7KuxFifYCIi7cKVmh4yA2l0QHOPftv9f5PNc=
 github.com/codegangsta/negroni v1.0.0/go.mod h1:v0y3T5G7Y1UlFfyxFn/QLRU4a2EuNau2iZY63YTKWo0=
@@ -485,6 +483,8 @@ github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0/go.mod h1:8NvIoxWQoOIhqOTXgf
 github.com/grpc-ecosystem/grpc-gateway v1.9.0/go.mod h1:vNeuVxBJEsws4ogUvrchl83t/GYV9WGTSLVdBhOQFDY=
 github.com/grpc-ecosystem/grpc-gateway v1.9.5/go.mod h1:vNeuVxBJEsws4ogUvrchl83t/GYV9WGTSLVdBhOQFDY=
 github.com/grpc-ecosystem/grpc-health-probe v0.2.1-0.20181220223928-2bf0a5b182db/go.mod h1:uBKkC2RbarFsvS5jMJHpVhTLvGlGQj9JJwkaePE3FWI=
+github.com/guillaumerose/gvisor-tap-vsock v0.0.0-20210219105952-b106620b228e h1:ypeqwJ8DU9TclYFBZK3WsR09OVISau1ccjQXUR/K7NE=
+github.com/guillaumerose/gvisor-tap-vsock v0.0.0-20210219105952-b106620b228e/go.mod h1:DsNrkk0GUSTqt0E/4/GMvjqsP7ns++O/6YaJn/TDBVM=
 github.com/h2non/filetype v1.1.2-0.20210202002709-95e28344e08c h1:qKQMoHGm6MTGxZuwJO17vNBEhZyeKdno3bjh7q90piM=
 github.com/h2non/filetype v1.1.2-0.20210202002709-95e28344e08c/go.mod h1:319b3zT68BvV+WRj7cwy856M2ehB3HqNOt6sy1HndBY=
 github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed/go.mod h1:tMWxXQ9wFIaZeTI9F+hmhFiGpFmhOHzyShyFUhRm0H4=

@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"runtime"
-	"strings"
 	"text/template"
 
 	cmdConfig "github.com/code-ready/crc/cmd/crc/cmd/config"
@@ -42,8 +41,7 @@ func init() {
 
 var startCmd = &cobra.Command{
 	Use:   "start",
-	Short: "Start the OpenShift cluster",
-	Long:  "Start the OpenShift cluster",
+	Short: "Start the virtual machine",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if err := viper.BindFlagSet(cmd.Flags()); err != nil {
 			return err
@@ -144,14 +142,6 @@ func (s *startResult) prettyPrintTo(writer io.Writer) error {
 	if err := writeTemplatedMessage(writer, s); err != nil {
 		return err
 	}
-	if crcversion.IsOkdBuild() {
-		_, err := fmt.Fprintln(writer, strings.Join([]string{
-			"",
-			"NOTE:",
-			"This cluster was built from OKD - The Community Distribution of Kubernetes that powers Red Hat OpenShift.",
-			"If you find an issue, please report it at https://github.com/openshift/okd"}, "\n"))
-		return err
-	}
 	return nil
 }
 
@@ -196,22 +186,10 @@ func checkIfNewVersionAvailable(noUpdateCheck bool) {
 	logging.Debugf("No new version available. The latest version is %s", newVersion)
 }
 
-const startTemplate = `Started the OpenShift cluster.
+const startTemplate = `Virtual machine started.
 
-The server is accessible via web console at:
-  {{ .ClusterConfig.WebConsoleURL }}
-
-Log in as administrator:
-  Username: {{ .ClusterConfig.AdminCredentials.Username }}
-  Password: {{ .ClusterConfig.AdminCredentials.Password }}
-
-Log in as user:
-  Username: {{ .ClusterConfig.DeveloperCredentials.Username }}
-  Password: {{ .ClusterConfig.DeveloperCredentials.Password }}
-
-Use the 'oc' command line interface:
-  {{ .CommandLinePrefix }} {{ .EvalCommandLine }}
-  {{ .CommandLinePrefix }} oc login {{ .ClusterConfig.URL }}
+Use the 'podman' command line interface:
+  {{ .CommandLinePrefix }} podman run -it alpine
 `
 
 type templateVariables struct {

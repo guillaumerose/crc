@@ -1,16 +1,18 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"syscall"
 	"time"
+
+	"github.com/google/tcpproxy"
 
 	"github.com/code-ready/crc/pkg/crc/api"
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -55,27 +57,11 @@ var daemonCmd = &cobra.Command{
 			GatewayMacAddress: "\x5A\x94\xEF\xE4\x0C\xDD",
 			DNS: []types.Zone{
 				{
-					Name:      "apps-crc.testing.",
-					DefaultIP: net.ParseIP("192.168.127.2"),
-				},
-				{
 					Name: "crc.testing.",
 					Records: []types.Record{
 						{
 							Name: "gateway",
 							IP:   net.ParseIP("192.168.127.1"),
-						},
-						{
-							Name: "api",
-							IP:   net.ParseIP("192.168.127.2"),
-						},
-						{
-							Name: "api-int",
-							IP:   net.ParseIP("192.168.127.2"),
-						},
-						{
-							Regexp: regexp.MustCompile("crc-(.*?)-master-0"),
-							IP:     net.ParseIP("192.168.126.11"),
 						},
 						{
 							Name: "host",
@@ -86,8 +72,8 @@ var daemonCmd = &cobra.Command{
 			},
 			Forwards: map[string]string{
 				fmt.Sprintf(":%d", constants.VsockSSHPort): "192.168.127.2:22",
-				":6443": "192.168.127.2:6443",
-				":443":  "192.168.127.2:443",
+				":80":   "192.168.127.2:80",
+				":8080": "192.168.127.2:8080",
 			},
 			NAT: map[string]string{
 				hostVirtualIP: "127.0.0.1",
@@ -133,6 +119,27 @@ func run(configuration *types.Configuration, endpoints []string) error {
 			}
 		}()
 	}
+
+	go func() {
+		var p tcpproxy.Proxy
+		p.ListenFunc = func(a, b string) (net.Listener, error) {
+			_ = os.Remove(filepath.Join(constants.CrcBaseDir, "podman.sock"))
+			return net.Listen("unix", filepath.Join(constants.CrcBaseDir, "podman.sock"))
+		}
+		p.AddRoute(":1234", &tcpproxy.DialProxy{
+			DialContext: func(ctx context.Context, network, addr string) (conn net.Conn, e error) {
+				return vn.Dial("tcp", "192.168.127.2:1234")
+			},
+		})
+		if err := p.Start(); err != nil {
+			log.Fatal(err)
+		}
+		go func() {
+			if err := p.Wait(); err != nil {
+				log.Error(err)
+			}
+		}()
+	}()
 
 	go func() {
 		if err := runDaemon(); err != nil {

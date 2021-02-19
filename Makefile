@@ -219,7 +219,7 @@ release: cross-lint embed_bundle build_docs_pdf gen_release_info
 	
 	pushd $(RELEASE_DIR) && sha256sum * > sha256sum.txt && popd
 
-HYPERKIT_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperkit_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
+HYPERKIT_BUNDLENAME = $(BUNDLE_DIR)/podman_hyperkit_3.0.0.crcbundle
 HYPERV_BUNDLENAME = $(BUNDLE_DIR)/crc_hyperv_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
 LIBVIRT_BUNDLENAME = $(BUNDLE_DIR)/crc_libvirt_$(BUNDLE_VERSION).$(BUNDLE_EXTENSION)
 
@@ -251,6 +251,8 @@ packagedir: clean check_bundledir $(BUILD_DIR)/macos-amd64/crc $(HOST_BUILD_DIR)
 	chmod 755 packaging/darwin/scripts/postinstall
 	mkdir -p packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
 	$(HOST_BUILD_DIR)/crc-embedder download packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
+
+	cp /Users/guillaumerose/Downloads/podman-remote-release-darwin-2/podman packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/
 
 	tar -C packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/ -xvzf packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/crc-tray-macos.tar.gz
 	rm packaging/root/"$(MACOS_INSTALL_PATH)"/$(CRC_VERSION)/crc-tray-macos.tar.gz

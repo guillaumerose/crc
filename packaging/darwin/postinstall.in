@@ -2,9 +2,12 @@
 set -e
 
 chmod 755 "__INSTALL_PATH__"/__VERSION__/crc
+chmod 755 "__INSTALL_PATH__"/__VERSION__/podman
 
 [ -d /usr/local/bin ] || mkdir /usr/local/bin
 
-rm -f /usr/local/bin/crc
+rm -f /usr/local/bin/podman-machine
+rm -f /usr/local/bin/podman
 
-ln -s "__INSTALL_PATH__"/__VERSION__/crc /usr/local/bin/crc
+ln -s "__INSTALL_PATH__"/__VERSION__/crc /usr/local/bin/podman-machine
+ln -s "__INSTALL_PATH__"/__VERSION__/podman /usr/local/bin/podman

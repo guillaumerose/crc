@@ -58,7 +58,7 @@ func TestApi(t *testing.T) {
 			command: "status",
 			expected: map[string]interface{}{
 				"Name":             "crc",
-				"CrcStatus":        "Running",
+				"PodmanStatus":     "Running",
 				"OpenshiftStatus":  "Running",
 				"OpenshiftVersion": "4.5.1",
 				"DiskUse":          float64(10000000000),
@@ -72,7 +72,7 @@ func TestApi(t *testing.T) {
 			clientFailing: true,
 			expected: map[string]interface{}{
 				"Name":             "crc",
-				"CrcStatus":        "",
+				"PodmanStatus":     "",
 				"OpenshiftStatus":  "",
 				"OpenshiftVersion": "",
 				"DiskUse":          float64(0),

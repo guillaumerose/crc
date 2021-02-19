@@ -80,7 +80,7 @@ func defaultBundleForOs(bundleVersion string) map[string]string {
 }
 
 func GetDefaultBundleForOs(os string) string {
-	return GetBundleFosOs(os, version.GetBundleVersion())
+	return "podman_hyperkit_3.0.0.crcbundle"
 }
 
 func GetBundleFosOs(os, bundleVersion string) string {
@@ -92,7 +92,7 @@ func GetDefaultBundle() string {
 }
 
 var (
-	CrcBaseDir         = filepath.Join(GetHomeDir(), ".crc")
+	CrcBaseDir         = filepath.Join(GetHomeDir(), ".podman-machine")
 	CrcBinDir          = filepath.Join(CrcBaseDir, "bin")
 	CrcOcBinDir        = filepath.Join(CrcBinDir, "oc")
 	ConfigPath         = filepath.Join(CrcBaseDir, ConfigFile)

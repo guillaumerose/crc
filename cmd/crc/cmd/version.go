@@ -31,18 +31,16 @@ func runPrintVersion(writer io.Writer, version *version, outputFormat string) er
 }
 
 type version struct {
-	Version          string `json:"version"`
-	Commit           string `json:"commit"`
-	OpenshiftVersion string `json:"openshiftVersion"`
-	Embedded         bool   `json:"embedded"`
+	Version  string `json:"version"`
+	Commit   string `json:"commit"`
+	Embedded bool   `json:"embedded"`
 }
 
 func defaultVersion() *version {
 	return &version{
-		Version:          crcversion.GetCRCVersion(),
-		Commit:           crcversion.GetCommitSha(),
-		OpenshiftVersion: crcversion.GetBundleVersion(),
-		Embedded:         constants.BundleEmbedded(),
+		Version:  crcversion.GetCRCVersion(),
+		Commit:   crcversion.GetCommitSha(),
+		Embedded: constants.BundleEmbedded(),
 	}
 }
 
@@ -56,12 +54,7 @@ func (v *version) prettyPrintTo(writer io.Writer) error {
 }
 
 func (v *version) lines() []string {
-	var embedded string
-	if !v.Embedded {
-		embedded = "not "
-	}
 	return []string{
-		fmt.Sprintf("CodeReady Containers version: %s+%s\n", v.Version, v.Commit),
-		fmt.Sprintf("OpenShift version: %s (%sembedded in executable)\n", v.OpenshiftVersion, embedded),
+		fmt.Sprintf("podman-machine version: %s+%s\n", v.Version, v.Commit),
 	}
 }

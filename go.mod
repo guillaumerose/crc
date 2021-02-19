@@ -18,6 +18,7 @@ require (
 	github.com/fatih/color v1.10.0 // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/google/go-cmp v0.5.4 // indirect
+	github.com/google/tcpproxy v0.0.0-20200125044825-b6bb9b5b8252
 	github.com/google/uuid v1.1.2 // indirect
 	github.com/h2non/filetype v1.1.2-0.20210202002709-95e28344e08c
 	github.com/hectane/go-acl v0.0.0-20190604041725-da78bae5fc95
@@ -103,3 +104,5 @@ replace (
 	k8s.io/sample-cli-plugin => k8s.io/sample-cli-plugin v0.19.0
 	k8s.io/sample-controller => k8s.io/sample-controller v0.19.0
 )
+
+replace github.com/code-ready/gvisor-tap-vsock => github.com/guillaumerose/gvisor-tap-vsock v0.0.0-20210219105952-b106620b228e

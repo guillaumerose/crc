@@ -49,7 +49,7 @@ func RegisterSettings(cfg *config.Config) {
 		"Disable update check (true/false, default: false)")
 	cfg.AddSetting(ExperimentalFeatures, false, config.ValidateBool, config.SuccessfullyApplied,
 		"Enable experimental features (true/false, default: false)")
-	cfg.AddSetting(NetworkMode, string(network.DefaultMode), network.ValidateMode, network.SuccessfullyAppliedMode,
+	cfg.AddSetting(NetworkMode, string(network.VSockMode), network.ValidateMode, network.SuccessfullyAppliedMode,
 		"Network mode (default or vsock)")
 	// Proxy Configuration
 	cfg.AddSetting(HTTPProxy, "", config.ValidateURI, config.SuccessfullyApplied,

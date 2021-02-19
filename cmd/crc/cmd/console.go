@@ -22,7 +22,7 @@ func init() {
 	addOutputFormatFlag(consoleCmd)
 	consoleCmd.Flags().BoolVar(&consolePrintURL, "url", false, "Print the URL for the OpenShift Web Console")
 	consoleCmd.Flags().BoolVar(&consolePrintCredentials, "credentials", false, "Print the credentials for the OpenShift Web Console")
-	rootCmd.AddCommand(consoleCmd)
+	// rootCmd.AddCommand(consoleCmd)
 }
 
 // consoleCmd represents the console command
