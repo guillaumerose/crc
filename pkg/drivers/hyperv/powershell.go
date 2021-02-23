@@ -11,7 +11,6 @@ import (
 )
 
 var (
-	ErrPowerShellNotFound = errors.New("Powershell was not found in the path")
 	ErrNotAdministrator   = errors.New("Hyper-v commands have to be run as an Administrator")
 	ErrNotInstalled       = errors.New("Hyper-V PowerShell Module is not available")
 )
