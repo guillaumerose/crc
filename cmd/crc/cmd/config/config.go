@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	Bundle                  = "bundle"
 	CPUs                    = "cpus"
 	Memory                  = "memory"
 	DiskSize                = "disk-size"
@@ -33,8 +32,6 @@ const (
 
 func RegisterSettings(cfg *config.Config) {
 	// Start command settings in config
-	cfg.AddSetting(Bundle, constants.DefaultBundlePath, config.ValidateBundlePath, config.SuccessfullyApplied,
-		fmt.Sprintf("Bundle path (string, default '%s')", constants.DefaultBundlePath))
 	cfg.AddSetting(CPUs, constants.DefaultCPUs, config.ValidateCPUs, config.RequiresRestartMsg,
 		fmt.Sprintf("Number of CPU cores (must be greater than or equal to '%d')", constants.DefaultCPUs))
 	cfg.AddSetting(Memory, constants.DefaultMemory, config.ValidateMemory, config.RequiresRestartMsg,

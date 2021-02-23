@@ -24,12 +24,14 @@ import (
 	"github.com/spf13/pflag"
 )
 
+var bundlePath string
+
 func init() {
 	rootCmd.AddCommand(startCmd)
 	addOutputFormatFlag(startCmd)
 
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
-	flagSet.StringP(cmdConfig.Bundle, "b", constants.DefaultBundlePath, "The system bundle used for deployment of the OpenShift cluster")
+	flagSet.StringVarP(&bundlePath, "bundle", "b", constants.DefaultBundlePath, "The system bundle used for deployment of the OpenShift cluster")
 	flagSet.StringP(cmdConfig.PullSecretFile, "p", "", fmt.Sprintf("File path of image pull secret (download from %s)", constants.CrcLandingPageURL))
 	flagSet.IntP(cmdConfig.CPUs, "c", constants.DefaultCPUs, "Number of CPU cores to allocate to the OpenShift cluster")
 	flagSet.IntP(cmdConfig.Memory, "m", constants.DefaultMemory, "MiB of memory to allocate to the OpenShift cluster")
@@ -63,7 +65,7 @@ func runStart(ctx context.Context) (*machine.StartResult, error) {
 	checkIfNewVersionAvailable(config.Get(cmdConfig.DisableUpdateCheck).AsBool())
 
 	startConfig := machine.StartConfig{
-		BundlePath: config.Get(cmdConfig.Bundle).AsString(),
+		BundlePath: bundlePath,
 		Memory:     config.Get(cmdConfig.Memory).AsInt(),
 		DiskSize:   config.Get(cmdConfig.DiskSize).AsInt(),
 		CPUs:       config.Get(cmdConfig.CPUs).AsInt(),
@@ -169,7 +171,7 @@ func validateStartFlags() error {
 	if err := validation.ValidateDiskSize(config.Get(cmdConfig.DiskSize).AsInt()); err != nil {
 		return err
 	}
-	if err := validation.ValidateBundle(config.Get(cmdConfig.Bundle).AsString()); err != nil {
+	if err := validation.ValidateBundle(bundlePath); err != nil {
 		return err
 	}
 	if config.Get(cmdConfig.NameServer).AsString() != "" {

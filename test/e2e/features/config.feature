@@ -40,16 +40,6 @@ Feature: Test configuration settings
             | pull-secret-file |    /Users | /nonexistent-file |
 
     @linux @darwin @windows
-    Scenario: CRC config checks (bundle version)
-        Given executing "crc setup" succeeds
-        When setting config property "bundle" to value "current bundle" succeeds
-        And "JSON" config file "crc.json" in CRC home folder contains key "bundle" with value matching "current bundle"
-        And setting config property "bundle" to value "/path/to/nonexistent/bundle/crc_hypervisor_version.tar.xz" fails
-        When unsetting config property "bundle" succeeds
-        Then "JSON" config file "crc.json" in CRC home folder does not contain key "bundle"
-
-
-    @linux @darwin @windows
     Scenario: CRC config checks (update check)
         When setting config property "disable-update-check" to value "true" succeeds
         Then  "JSON" config file "crc.json" in CRC home folder contains key "disable-update-check" with value matching "true"
