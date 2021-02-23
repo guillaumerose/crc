@@ -2,17 +2,13 @@ package hyperv
 
 import (
 	"bufio"
-	"bytes"
 	"errors"
-	"os/exec"
+	"fmt"
 	"strings"
 
-	"fmt"
-
 	log "github.com/code-ready/crc/pkg/crc/logging"
+	"github.com/code-ready/crc/pkg/os/windows/powershell"
 )
-
-var powershell string
 
 var (
 	ErrPowerShellNotFound = errors.New("Powershell was not found in the path")
@@ -20,22 +16,12 @@ var (
 	ErrNotInstalled       = errors.New("Hyper-V PowerShell Module is not available")
 )
 
-func init() {
-	powershell, _ = exec.LookPath("powershell.exe")
-}
-
 func cmdOut(args ...string) (string, error) {
-	args = append([]string{"-NoProfile", "-NonInteractive"}, args...)
-	cmd := exec.Command(powershell, args...)
-	log.Debugf("[executing ==>] : %v %v", powershell, strings.Join(args, " "))
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-	log.Debugf("[stdout =====>] : %s", stdout.String())
-	log.Debugf("[stderr =====>] : %s", stderr.String())
-	return stdout.String(), err
+	log.Debugf("[executing ==>] : powershell(%v)", strings.Join(args, " "))
+	stdout, stderr, err := powershell.Execute(args...)
+	log.Debugf("[stdout =====>] : %s", stdout)
+	log.Debugf("[stderr =====>] : %s", stderr)
+	return stdout, err
 }
 
 func cmd(args ...string) error {
