@@ -2,6 +2,7 @@ package powershell
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -70,7 +71,10 @@ func Execute(args ...string) (string, string, error) {
 	cmd.Stderr = &stderr
 
 	err := cmd.Run()
-	return stdout.String(), stderr.String(), err
+	if err != nil {
+		return stdout.String(), stderr.String(), fmt.Errorf("error running %v:\nCommand stdout:\n%v\nstderr:\n%v\nerror:\n%v", cmd, stdout.String(), stderr.String(), err)
+	}
+	return stdout.String(), stderr.String(), nil
 }
 
 func ExecuteAsAdmin(reason, cmd string) (string, string, error) {
