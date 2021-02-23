@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"syscall"
-
-	"os/exec"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
 )
