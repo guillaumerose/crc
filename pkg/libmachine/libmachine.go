@@ -1,14 +1,12 @@
 package libmachine
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"time"
 
 	crcerrors "github.com/code-ready/crc/pkg/crc/errors"
 	log "github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/drivers/hyperv"
 	"github.com/code-ready/crc/pkg/libmachine/host"
 	"github.com/code-ready/crc/pkg/libmachine/persist"
 	"github.com/code-ready/machine/libmachine/drivers"
@@ -39,8 +37,9 @@ func NewClient(storePath string) *Client {
 func (api *Client) NewHost(driverName string, driverPath string, rawDriver []byte) (*host.Host, error) {
 	var driver drivers.Driver
 	if driverName == "hyperv" {
-		driver = hyperv.NewDriver("", "")
-		if err := json.Unmarshal(rawDriver, &driver); err != nil {
+		var err error
+		driver, err = hypervDriver(rawDriver)
+		if err != nil {
 			return nil, err
 		}
 	} else {
@@ -68,8 +67,8 @@ func (api *Client) Load(name string) (*host.Host, error) {
 	}
 
 	if h.DriverName == "hyperv" {
-		driver := hyperv.NewDriver("", "")
-		if err := json.Unmarshal(h.RawDriver, &driver); err != nil {
+		driver, err := hypervDriver(h.RawDriver)
+		if err != nil {
 			return nil, err
 		}
 		h.Driver = driver
