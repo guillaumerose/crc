@@ -14,11 +14,14 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine"
 	"github.com/code-ready/crc/pkg/crc/preflight"
 	"github.com/code-ready/crc/pkg/crc/version"
+	"golang.org/x/sync/semaphore"
 )
 
 type Handler struct {
 	MachineClient AdaptedClient
 	Config        crcConfig.Storage
+
+	StartLock *semaphore.Weighted
 }
 
 func (h *Handler) Status() string {
@@ -32,6 +35,14 @@ func (h *Handler) Stop() string {
 }
 
 func (h *Handler) Start(args json.RawMessage) string {
+	if !h.StartLock.TryAcquire(int64(1)) {
+		startErr := &StartResult{
+			Name:  h.MachineClient.GetName(),
+			Error: "Start already in progress",
+		}
+		return encodeStructToJSON(startErr)
+	}
+	defer h.StartLock.Release(int64(1))
 	var parsedArgs startArgs
 	var err error
 	if args != nil {

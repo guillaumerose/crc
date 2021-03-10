@@ -9,6 +9,7 @@ import (
 	crcConfig "github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
+	"golang.org/x/sync/semaphore"
 )
 
 func CreateServer(socketPath string, config crcConfig.Storage, machine machine.Client) (Server, error) {
@@ -26,6 +27,7 @@ func createServerWithListener(listener net.Listener, config crcConfig.Storage, m
 		handler: &Handler{
 			Config:        config,
 			MachineClient: &Adapter{Underlying: machine},
+			StartLock:     semaphore.NewWeighted(int64(1)),
 		},
 	}
 	return apiServer, nil
