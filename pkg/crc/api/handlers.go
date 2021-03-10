@@ -4,7 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	goerrors "errors"
 	"fmt"
+	"sync"
+	"time"
 
 	"github.com/code-ready/crc/cmd/crc/cmd/config"
 	"github.com/code-ready/crc/pkg/crc/cluster"
@@ -21,7 +24,11 @@ type Handler struct {
 	MachineClient AdaptedClient
 	Config        crcConfig.Storage
 
-	StartLock *semaphore.Weighted
+	StartLock      *semaphore.Weighted
+	StopDeleteLock *semaphore.Weighted
+
+	startCancelFunc     context.CancelFunc
+	startCancelFuncLock sync.Mutex
 }
 
 func (h *Handler) Status() string {
@@ -30,6 +37,16 @@ func (h *Handler) Status() string {
 }
 
 func (h *Handler) Stop() string {
+	cleanup, err := h.lockAndCancelStart()
+	if err != nil {
+		startErr := &Result{
+			Name:  h.MachineClient.GetName(),
+			Error: err.Error(),
+		}
+		return encodeStructToJSON(startErr)
+	}
+	defer cleanup()
+
 	commandResult := h.MachineClient.Stop()
 	return encodeStructToJSON(commandResult)
 }
@@ -43,6 +60,17 @@ func (h *Handler) Start(args json.RawMessage) string {
 		return encodeStructToJSON(startErr)
 	}
 	defer h.StartLock.Release(int64(1))
+
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	h.startCancelFuncLock.Lock()
+	h.startCancelFunc = cancelFunc
+	h.startCancelFuncLock.Unlock()
+	defer func() {
+		h.startCancelFuncLock.Lock()
+		h.startCancelFunc = nil
+		h.startCancelFuncLock.Unlock()
+	}()
+
 	var parsedArgs startArgs
 	var err error
 	if args != nil {
@@ -64,7 +92,7 @@ func (h *Handler) Start(args json.RawMessage) string {
 	}
 
 	startConfig := getStartConfig(h.Config, parsedArgs)
-	status := h.MachineClient.Start(context.Background(), startConfig)
+	status := h.MachineClient.Start(ctx, startConfig)
 	return encodeStructToJSON(status)
 }
 
@@ -106,6 +134,16 @@ func (h *Handler) GetVersion() string {
 }
 
 func (h *Handler) Delete() string {
+	cleanup, err := h.lockAndCancelStart()
+	if err != nil {
+		startErr := &Result{
+			Name:  h.MachineClient.GetName(),
+			Error: err.Error(),
+		}
+		return encodeStructToJSON(startErr)
+	}
+	defer cleanup()
+
 	r := h.MachineClient.Delete()
 	return encodeStructToJSON(r)
 }
@@ -249,4 +287,29 @@ func encodeErrorToJSON(errMsg string) string {
 		Error:   errMsg,
 	}
 	return encodeStructToJSON(err)
+}
+
+func (h *Handler) lockAndCancelStart() (func(), error) {
+	if !h.StopDeleteLock.TryAcquire(int64(1)) {
+		return nil, goerrors.New("stop or delete already in progress")
+	}
+
+	h.startCancelFuncLock.Lock()
+	if h.startCancelFunc != nil {
+		h.startCancelFunc()
+	}
+	h.startCancelFuncLock.Unlock()
+
+	// Wait for start to finish and block start action until stop finished
+	timeout, cancelFunc := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancelFunc()
+	if err := h.StartLock.Acquire(timeout, int64(1)); err != nil {
+		h.StopDeleteLock.Release(int64(1))
+		return nil, goerrors.New("startup sequence didn't abort in less than 15s")
+	}
+
+	return func() {
+		h.StartLock.Release(int64(1))
+		h.StopDeleteLock.Release(int64(1))
+	}, nil
 }

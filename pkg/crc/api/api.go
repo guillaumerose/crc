@@ -25,9 +25,10 @@ func createServerWithListener(listener net.Listener, config crcConfig.Storage, m
 	apiServer := Server{
 		listener: listener,
 		handler: &Handler{
-			Config:        config,
-			MachineClient: &Adapter{Underlying: machine},
-			StartLock:     semaphore.NewWeighted(int64(1)),
+			Config:         config,
+			MachineClient:  &Adapter{Underlying: machine},
+			StartLock:      semaphore.NewWeighted(int64(1)),
+			StopDeleteLock: semaphore.NewWeighted(int64(1)),
 		},
 	}
 	return apiServer, nil
