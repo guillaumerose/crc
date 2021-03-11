@@ -28,7 +28,10 @@ type Repository struct {
 }
 
 func (repo *Repository) Get(bundleName string) (*CrcBundleInfo, error) {
-	path := filepath.Join(repo.CacheDir, strings.TrimSuffix(bundleName, bundleExtension))
+	return readBundleInfo(filepath.Join(repo.CacheDir, strings.TrimSuffix(bundleName, bundleExtension)))
+}
+
+func readBundleInfo(path string) (*CrcBundleInfo, error) {
 	if _, err := os.Stat(path); err != nil {
 		return nil, errors.Wrapf(err, "could not find cached bundle info in %s", path)
 	}
@@ -106,22 +109,20 @@ func (bundle *CrcBundleInfo) createSymlinkOrCopyOpenShiftClient(ocBinDir string)
 }
 
 func (repo *Repository) Extract(path string) error {
-	bundleName := filepath.Base(path)
-
-	tmpDir := filepath.Join(repo.CacheDir, "tmp-extract")
-	_ = os.RemoveAll(tmpDir) // clean up before using it
-	defer func() {
-		_ = os.RemoveAll(tmpDir) // clean up after using it
-	}()
-
-	if _, err := extract.Uncompress(path, tmpDir, &extract.Options{
+	dir := filepath.Join(repo.CacheDir, "tmp-extract")
+	_ = os.RemoveAll(dir) // clean up before using it
+	_, err := extract.Uncompress(path, dir, &extract.Options{
 		ShowProgress: true,
-	}); err != nil {
+		Flatten:      true,
+	})
+	if err != nil {
 		return err
 	}
-
-	bundleDir := strings.TrimSuffix(bundleName, bundleExtension)
-	return os.Rename(filepath.Join(tmpDir, bundleDir), filepath.Join(repo.CacheDir, bundleDir))
+	bundle, err := readBundleInfo(dir)
+	if err != nil {
+		return err
+	}
+	return os.Rename(dir, filepath.Join(repo.CacheDir, bundle.GetBundleName()))
 }
 
 var defaultRepo = &Repository{
