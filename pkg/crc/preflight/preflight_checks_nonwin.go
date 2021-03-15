@@ -3,6 +3,7 @@
 package preflight
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"syscall"
@@ -12,12 +13,17 @@ import (
 	crcos "github.com/code-ready/crc/pkg/os"
 )
 
+const (
+	rootCheck = "check-root-user"
+	rootError = "crc should not be ran as root. Turn off this check with 'crc config set skip-" + rootCheck + " true'"
+)
+
 var nonWinPreflightChecks = [...]Check{
 	{
-		configKeySuffix:  "check-root-user",
-		checkDescription: "Checking if running as non-root",
+		configKeySuffix:  rootCheck,
+		checkDescription: "Checking if running as root",
 		check:            checkIfRunningAsNormalUser,
-		fixDescription:   "crc should be ran as a normal user",
+		fixDescription:   rootError,
 		flags:            NoFix,
 	},
 	{
@@ -32,7 +38,7 @@ func checkIfRunningAsNormalUser() error {
 		return nil
 	}
 	logging.Debug("Ran as root")
-	return fmt.Errorf("crc should be ran as a normal user")
+	return errors.New(rootError)
 }
 
 func setSuid(path string) error {

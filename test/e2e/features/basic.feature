@@ -40,7 +40,7 @@ Feature: Basic test
     Scenario: CRC setup on Linux
         When executing "crc setup" succeeds
         And stderr should contain "Checking if CRC bundle is extracted in '$HOME/.crc'"
-        And stderr should contain "Checking if running as non-root"
+        And stderr should contain "Checking if running as root"
         And stderr should contain "Checking if Virtualization is enabled"
         And stderr should contain "Checking if KVM is enabled"
         And stderr should contain "Checking if libvirt is installed"
@@ -59,7 +59,7 @@ Feature: Basic test
     @darwin
     Scenario: CRC setup on Mac
         When executing "crc setup" succeeds
-        And stderr should contain "Checking if running as non-root"
+        And stderr should contain "Checking if running as root"
         And stderr should contain "Checking if HyperKit is installed"
         And stderr should contain "Checking if crc-driver-hyperkit is installed"
         And stderr should contain "Installing crc-machine-hyperkit"
